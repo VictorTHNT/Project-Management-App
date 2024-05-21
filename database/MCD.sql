@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS project_management_app;
 USE project_management_app;
 
 -- Suppression des tables existantes si elles existent
-DROP TABLE IF EXISTS Project_Team;
+DROP TABLE IF EXISTS User_Team;
 DROP TABLE IF EXISTS Tasks;
 DROP TABLE IF EXISTS Projects;
 DROP TABLE IF EXISTS Users;
@@ -48,12 +48,13 @@ CREATE TABLE Tasks (
     FOREIGN KEY (assignee_id) REFERENCES Users(id)
 );
 
--- Création de la table 'Project_Team'
-CREATE TABLE Project_Team (
+-- Création de la table 'User_Team'
+CREATE TABLE User_Team (
+    team_id INT AUTO_INCREMENT PRIMARY KEY,
+    team_name VARCHAR(100) NOT NULL,
     project_id INT,
     user_id INT,
-    team_name VARCHAR(100), -- Ajout du nom de l'équipe
-    PRIMARY KEY (project_id, user_id),
+    post VARCHAR(100), -- Ajout du poste dans l'équipe
     FOREIGN KEY (project_id) REFERENCES Projects(id),
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );
