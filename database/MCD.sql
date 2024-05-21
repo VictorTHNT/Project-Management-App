@@ -1,14 +1,15 @@
--- Suppression des tables existantes si elles existent
-DROP TABLE IF EXISTS Project_Team;
-DROP TABLE IF EXISTS Tasks;
-DROP TABLE IF EXISTS Projects;
-DROP TABLE IF EXISTS Users;
-
 -- Création de la base de données
 CREATE DATABASE IF NOT EXISTS project_management_app;
 
 -- Utilisation de la base de données
 USE project_management_app;
+
+-- Suppression des tables existantes si elles existent
+DROP TABLE IF EXISTS Project_Team;
+DROP TABLE IF EXISTS Tasks;
+DROP TABLE IF EXISTS Projects;
+DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS Messages;
 
 -- Création de la table 'Users'
 CREATE TABLE Users (
@@ -51,4 +52,17 @@ CREATE TABLE Project_Team (
     PRIMARY KEY (project_id, user_id),
     FOREIGN KEY (project_id) REFERENCES Projects(id),
     FOREIGN KEY (user_id) REFERENCES Users(id)
+);
+
+
+-- Ajout de la table 'Messages' pour la messagerie
+CREATE TABLE Messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT,
+    receiver_id INT,
+    subject VARCHAR(255),
+    body TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_id) REFERENCES Users(id),
+    FOREIGN KEY (receiver_id) REFERENCES Users(id)
 );
