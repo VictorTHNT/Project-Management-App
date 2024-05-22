@@ -1,121 +1,23 @@
-body {
-    font-family: Arial, sans-serif;
+/*---------------- Bouton creation d'un projet  ---------------*/
+
+.project-row:hover {
+    background-color: #f0f0f0;
 }
 
-.sidebar {
-    width: 80px;
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    background-color: #4c00c2;
-    transition: width 0.3s;
-    overflow-x: hidden;
-    padding-top: 20px;
-    border-radius: 15px; /* Rounded corners */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between; /* Distribute space between profile, menu and button */
-    z-index: 1000; /* Ensure the sidebar is above other content */
-}
-
-.sidebar.expanded {
-    width: 250px;
-}
-
-.sidebar .profile-pic {
-    width: 60px; /* Adjust width */
-    height: 60px; /* Adjust height */
+.plus-button {
+    background-color: #007bff;
     border-radius: 50%;
-    margin: 0 auto;
-    display: block;
-    object-fit: cover; /* Ensure the image keeps its aspect ratio and covers the area */
-}
-
-.sidebar .profile-section {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.sidebar .menu-section {
-    flex-grow: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Center icons horizontally */
-    justify-content: center; /* Center icons vertically */
-}
-
-.sidebar a {
-    text-align: center;
-    padding: 20px 0;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     color: white;
-    text-decoration: none;
-    transition: all 0.3s;
-    font-size: 18px;
-}
-
-.sidebar.expanded a {
-    justify-content: flex-start;
-    padding-left: 20px;
-}
-
-.sidebar a:hover {
-    background-color: #575757;
-}
-
-.sidebar .expand-btn, .sidebar .collapse-btn {
-    position: absolute;
-    top: 50%;
-    right: -5px;
-    transform: translateY(-50%);
-    cursor: pointer;
-    font-size: 18px;
-    color: white;
-    background-color: transparent;
-    border: none;
-    z-index: 1100; /* Ensure the button is above the sidebar */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.sidebar .expand-btn:focus, .sidebar .collapse-btn:focus {
-    outline: none;
-    box-shadow: none;
-}
-
-.sidebar .expand-btn:active, .sidebar .collapse-btn:active {
-    background-color: transparent;
-    color: white;
-}
-
-.sidebar.expanded .expand-btn {
-    display: none;
-}
-
-.sidebar .collapse-btn {
-    display: none;
-}
-
-.sidebar.expanded .collapse-btn {
-    display: block;
-    right: 5px;
-}
-
-.bi {
     font-size: 24px;
+    line-height: 1.5;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }
 
-.nav-text {
-    display: none;
-}
-
-.sidebar.expanded .nav-text {
-    display: inline-block;
-    margin-left: 10px;
+.plus-button:hover {
+    background-color: #0056b3;
 }
