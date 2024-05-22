@@ -15,6 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $prenom = htmlspecialchars($_POST['prenom']);
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
     $profile_image = $_FILES['profile_image'];
+    $current_password = $_POST['current_password'];
+    $new_password = $_POST['new_password'];
+    $confirm_password = $_POST['confirm_password'];
 
     // Gérer l'upload de l'image
     if ($profile_image['name']) {
@@ -33,6 +36,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Si aucune nouvelle image n'est téléchargée, conserver l'ancienne
         $profile_image_path = $_POST['current_profile_image'];
+    }
+
+    // Vérification et mise à jour du mot de passe
+    if (!empty($current_password) && !empty($new_password) && !empty($confirm_password)) {
+        if ($new_password !== $confirm_password) {
+            $message = 'Les nouveaux mots de passe ne correspondent pas.';
+        } else {
+            $stmt = $pdo->prepare("SELECT password FROM Users WHERE id = ?");
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch();
+
+            if (password_verify($current_password, $user['password'])) {
+                $new_password_hashed = password_hash($new_password, PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare("UPDATE Users SET password = ? WHERE id = ?");
+                $stmt->execute([$new_password_hashed, $user_id]);
+                $message = 'Mot de passe mis à jour avec succès.';
+            } else {
+                $message = 'Le mot de passe actuel est incorrect.';
+            }
+        }
     }
 
     // Mettre à jour les informations de l'utilisateur dans la base de données
@@ -78,7 +101,7 @@ $user = $stmt->fetch();
             border-radius: 50%;
             width: 150px;
             height: 150px;
-            object-fit: round;
+            object-fit: cover;
             margin-bottom: 20px;
         }
         .form-label {
@@ -122,6 +145,19 @@ $user = $stmt->fetch();
             <label for="profile_image" class="form-label">Photo de Profil</label>
             <input type="file" class="form-control" id="profile_image" name="profile_image">
             <input type="hidden" name="current_profile_image" value="<?php echo htmlspecialchars($user['profile']); ?>">
+        </div>
+        <hr>
+        <div class="mb-3">
+            <label for="current_password" class="form-label">Mot de Passe Actuel</label>
+            <input type="password" class="form-control" id="current_password" name="current_password">
+        </div>
+        <div class="mb-3">
+            <label for="new_password" class="form-label">Nouveau Mot de Passe</label>
+            <input type="password" class="form-control" id="new_password" name="new_password">
+        </div>
+        <div class="mb-3">
+            <label for="confirm_password" class="form-label">Confirmer le Nouveau Mot de Passe</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password">
         </div>
         <button type="submit" class="btn btn-primary w-100">Mettre à jour</button>
     </form>
