@@ -4,7 +4,7 @@ session_start();
 
 # If user is not logged in then redirect him to login page
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== TRUE) {
-  echo "<script>" . "window.location.href='./login.php';" . "</script>";
+  echo "<script>" . "window.location.href='./auth./login.php';" . "</script>";
   exit;
 }
 ?>
@@ -18,7 +18,7 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== TRUE) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User login system</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
-  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./auth./css/main.css">
   <link rel="shortcut icon" href="./img/favicon-16x16.png" type="image/x-icon">
 </head>
 
@@ -32,7 +32,7 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== TRUE) {
       <div class="col-lg-5 text-center">
         <img src="./img/blank-avatar.jpg" class="img-fluid rounded" alt="User avatar" width="180">
         <h4 class="my-4">Hello, <?= htmlspecialchars($_SESSION["username"]); ?></h4>
-        <a href="./logout.php" class="btn btn-primary">Log Out</a>
+        <a href="./auth./logout.php" class="btn btn-primary">Log Out</a>
       </div>
     </div>
   </div>

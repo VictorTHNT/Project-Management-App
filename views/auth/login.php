@@ -9,7 +9,7 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] == TRUE) {
 }
 
 # Include connection
-require_once "./config.php";
+require_once "./auth./config.php";
 
 # Define variables and initialize with empty values
 $user_login_err = $user_password_err = $login_err = "";
@@ -74,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
       } else {
         echo "<script>" . "alert('Oops! Something went wrong. Please try again later.');" . "</script>";
-        echo "<script>" . "window.location.href='./login.php'" . "</script>";
+        echo "<script>" . "window.location.href='./auth./login.php'" . "</script>";
         exit;
       }
 
@@ -99,7 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
   <link rel="stylesheet" href="./css/main.css">
   <link rel="shortcut icon" href="./img/favicon-16x16.png" type="image/x-icon">
-  <script defer src="./js/script.js"></script>
+  <script defer src="./auth./js/script.js"></script>
 </head>
 
 <body>
@@ -133,7 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="mb-3">
               <input type="submit" class="btn btn-primary form-control" name="submit" value="Log In">
             </div>
-            <p class="mb-0">Don't have an account ? <a href="./register.php">Sign Up</a></p>
+            <p class="mb-0">Don't have an account ? <a href="./auth./register.php">Sign Up</a></p>
           </form>
           <!-- form ends here -->
         </div>

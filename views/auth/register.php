@@ -1,6 +1,6 @@
 <?php
 # Include connection
-require_once "./config.php";
+require_once "././config.php";
 
 # Define variables and initialize with empty values
 $username_err = $email_err = $password_err = "";
@@ -109,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       # Execute the prepared statement
       if (mysqli_stmt_execute($stmt)) {
         echo "<script>" . "alert('Registeration completed successfully. Login to continue.');" . "</script>";
-        echo "<script>" . "window.location.href='./login.php';" . "</script>";
+        echo "<script>" . "window.location.href='./auth./login.php';" . "</script>";
         exit;
       } else {
         echo "<script>" . "alert('Oops! Something went wrong. Please try again later.');" . "</script>";
