@@ -1,41 +1,34 @@
 <?php
-session_start();
 include '../../includes/connect.php';
+session_start();
 
+// Vérification de la connexion de l'utilisateur
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../auth/login.php');
+    header("Location: ../../views/auth/login.php");
     exit;
 }
 
-$project_id = isset($_GET['project_id']) ? intval($_GET['project_id']) : (isset($_POST['selected_project']) ? intval($_POST['selected_project']) : null);
-
-if ($project_id === null || $project_id == 0) {
-    echo "ID du projet manquant.";
-    exit;
-}
+$user_id = $_SESSION['user_id'];
+$user_role = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : '';
 
 try {
-    $stmt = $pdo->prepare("SELECT * FROM Tasks WHERE project_id = ?");
-    $stmt->execute([$project_id]);
-    $tasks = $stmt->fetchAll();
-} catch (Exception $e) {
+    if ($user_role === 'admin') {
+        // Récupérer tous les projets pour les administrateurs
+        $projectsStmt = $pdo->query("SELECT id, title, description, end_date FROM Projects");
+    } else {
+        // Récupérer les projets associés à l'utilisateur connecté
+        $projectsStmt = $pdo->prepare("
+            SELECT Projects.id, Projects.title, Projects.description, Projects.end_date 
+            FROM Projects 
+            JOIN User_Team ON Projects.id = User_Team.project_id 
+            WHERE User_Team.user_id = ?
+        ");
+        $projectsStmt->execute([$user_id]);
+    }
+    $projects = $projectsStmt->fetchAll();
+} catch (PDOException $e) {
     echo "Erreur : " . $e->getMessage();
     exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['task_id']) && isset($_POST['status'])) {
-    $task_id = intval($_POST['task_id']);
-    $status = $_POST['status'];
-
-    try {
-        $stmt = $pdo->prepare("UPDATE Tasks SET status = ? WHERE id = ?");
-        $stmt->execute([$status, $task_id]);
-        header("Location: view.php?project_id=" . $project_id);
-        exit;
-    } catch (Exception $e) {
-        echo "Erreur : " . $e->getMessage();
-        exit;
-    }
 }
 ?>
 
@@ -77,7 +70,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['task_id']) && isset($
                         <form method="post" class="d-inline">
                             <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
                             <input type="hidden" name="project_id" value="<?php echo $project_id; ?>">
-                            <button type="submit" name="status" value="pending" class="btn btn-outline-secondary btn-sm rounded-circle" title="Pending">
+                            <button type="submit" name="status" value="pending" class="btn btn-outline-danger btn-sm rounded-circle" title="Pending">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </form>
+                        <form method="post" class="d-inline">
+                            <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                            <input type="hidden" name="project_id" value="<?php echo $project_id; ?>">
+                            <button type="submit" name="status" value="in_progress" class="btn btn-outline-warning btn-sm rounded-circle" title="in progress">
                                 <i class="bi bi-arrow-clockwise"></i>
                             </button>
                         </form>

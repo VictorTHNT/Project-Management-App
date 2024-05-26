@@ -20,8 +20,3 @@ try {
     die("Erreur de connexion à la base de données : " . $e->getMessage());
 }
 ?>
-
-
-
-
-<!-- commande a mettre pour relier les autres page  <?php//include 'includes/connect.php'; ?> -->
