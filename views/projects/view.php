@@ -36,60 +36,60 @@ try {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Gestion de projet</title>
+    <title>Voir les Projets</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="../../assets/css/style.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <script>
+        function getSelectedProject() {
+            const selected = document.querySelector('input[name="selected_project"]:checked');
+            if (selected) {
+                window.location.href = `../index.php?selected_project=${selected.value}`;
+            } else {
+                alert('Veuillez sélectionner un projet.');
+            }
+        }
+    </script>
 </head>
 <body>
 <div class="container mt-5">
-    <h1 class="text-center">Gestion de projet</h1>
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Sélectionnez un projet</h2>
-        <?php if ($user_role === 'manager' || $user_role === 'admin'): ?>
-            <a href="create.php" class="plus-button">
-                <i class="bi bi-plus"></i>
-            </a>
-        <?php endif; ?>
+    <h1 class="mb-4">Liste des Projets</h1>
+    <div class="d-flex justify-content-end mb-4">
+        <a href="create.php" class="btn btn-primary me-2">
+            <i class="bi bi-plus"></i> Ajouter
+        </a>
     </div>
-    <?php if (count($projects) > 0): ?>
-        <form method="POST" action="../index.php">
-            <table class="table table-hover">
-                <thead>
+    <form>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sélectionner</th>
+                    <th>Titre</th>
+                    <th>Description</th>
+                    <th>Date de fin</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($projects as $project): ?>
                     <tr>
-                        <th scope="col"></th>
-                        <th scope="col">Nom du projet</th>
-                        <th scope="col">Description</th>
-                        <th scope="col">Date de fin</th>
-                        <th scope="col">Actions</th>
+                        <td>
+                            <input type="radio" name="selected_project" value="<?php echo $project['id']; ?>">
+                        </td>
+                        <td><?php echo htmlspecialchars($project['title']); ?></td>
+                        <td><?php echo htmlspecialchars($project['description']); ?></td>
+                        <td><?php echo htmlspecialchars($project['end_date']); ?></td>
+                        <td>
+                            <a href="edit.php?id=<?php echo $project['id']; ?>" class="btn btn-outline-secondary btn-sm me-2">Editer</a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($projects as $project): ?>
-                        <tr class="project-row">
-                            <td>
-                                <input class="form-check-input" type="radio" name="selected_project" value="<?php echo htmlspecialchars($project['id']); ?>" required>
-                            </td>
-                            <td><?php echo htmlspecialchars($project['title']); ?></td>
-                            <td><?php echo htmlspecialchars($project['description']); ?></td>
-                            <td><?php echo htmlspecialchars($project['end_date']); ?></td>
-                            <td>
-                                <a href="edit.php?id=<?php echo htmlspecialchars($project['id']); ?>" class="btn btn-warning btn-sm">Edit</a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            <div class="text-center">
-                <button type="submit" class="btn btn-success btn-lg">Entrer</button>
-            </div>
-        </form>
-    <?php else: ?>
-        <div class="alert alert-info" role="alert">
-            Vous n'êtes associé à aucun projet.
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-primary" onclick="getSelectedProject()">Entrer</button>
         </div>
-    <?php endif; ?>
+    </form>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

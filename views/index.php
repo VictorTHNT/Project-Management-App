@@ -2,41 +2,37 @@
 include '../includes/connect.php';
 session_start();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['selected_project'])) {
-    $project_id = $_POST['selected_project'];
+if (!isset($_GET['selected_project'])) {
+    echo "ID du projet manquant.";
+    exit;
+}
 
-    // Fetch project details
-    try {
-        $projectStmt = $pdo->prepare("SELECT title FROM Projects WHERE id = ?");
-        $projectStmt->execute([$project_id]);
-        $project = $projectStmt->fetch();
+$project_id = $_GET['selected_project'];
 
-        if (!$project) {
-            throw new Exception("Project not found");
-        }
+try {
+    $projectStmt = $pdo->prepare("SELECT * FROM Projects WHERE id = ?");
+    $projectStmt->execute([$project_id]);
+    $project = $projectStmt->fetch();
 
-        $project_title = $project['title'];
-
-        // Fetch project members
-        $membersStmt = $pdo->prepare("
-            SELECT Users.nom, Users.prenom, Users.email, Users.role 
-            FROM Users 
-            JOIN User_Team ON Users.id = User_Team.user_id 
-            WHERE User_Team.project_id = ?
-        ");
-        $membersStmt->execute([$project_id]);
-        $members = $membersStmt->fetchAll();
-
-        // Fetch project tasks
-        $tasksStmt = $pdo->prepare("SELECT title, status FROM Tasks WHERE project_id = ?");
-        $tasksStmt->execute([$project_id]);
-        $tasks = $tasksStmt->fetchAll();
-    } catch (Exception $e) {
-        echo "Erreur : " . $e->getMessage();
+    if (!$project) {
+        echo "Projet introuvable.";
         exit;
     }
-} else {
-    echo "Aucun projet sélectionné.";
+
+    $membersStmt = $pdo->prepare("
+        SELECT Users.nom, Users.prenom, Users.email, User_Team.post, User_Team.team_name 
+        FROM Users 
+        JOIN User_Team ON Users.id = User_Team.user_id 
+        WHERE User_Team.project_id = ?
+    ");
+    $membersStmt->execute([$project_id]);
+    $members = $membersStmt->fetchAll();
+
+    $tasksStmt = $pdo->prepare("SELECT * FROM Tasks WHERE project_id = ?");
+    $tasksStmt->execute([$project_id]);
+    $tasks = $tasksStmt->fetchAll();
+} catch (Exception $e) {
+    echo "Erreur : " . $e->getMessage();
     exit;
 }
 ?>
@@ -45,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['selected_project'])) {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Projet [<?php echo htmlspecialchars($project_title); ?>]</title>
+    <title>Projet [<?php echo htmlspecialchars($project['title']); ?>]</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
@@ -53,15 +49,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['selected_project'])) {
 </head>
 <body>
 <div class="container mt-5">
-    <h1 class="text-center">Projet [<?php echo htmlspecialchars($project_title); ?>]</h1>
+    <h1 class="text-center">Projet [<?php echo htmlspecialchars($project['title']); ?>]</h1>
+    <div class="row mt-4">
+        <!-- Cahier des Charges Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title">Cahier des Charges</h3>
+                    <?php if ($project['cahier_charge']): ?>
+                        <a href="<?php echo htmlspecialchars('../assets/upload/' . basename($project['cahier_charge'])); ?>" class="btn btn-primary mt-2" download>Télécharger</a>
+                    <?php else: ?>
+                        <p>Aucun cahier des charges disponible.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <!-- Upload Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title">Téléverser un fichier</h3>
+                    <a href="messages/upload.php?project_id=<?php echo $project_id; ?>" class="btn btn-primary mt-2">Téléverser</a>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row mt-4">
         <!-- Tasks Section -->
         <div class="col-md-6">
             <div class="card text-center">
                 <div class="card-body">
-                    <h3 class="card-title">Task</h3>
-                    <a href="tasks/create.php" class="btn btn-primary mt-2">Create</a>
-                    <a href="tasks/view.php" class="btn btn-success mt-2">View</a>
+                    <h3 class="card-title">Tâches</h3>
+                    <a href="tasks/create.php?project_id=<?php echo $project_id; ?>" class="btn btn-primary mt-2">Créer</a>
+                    <a href="tasks/view.php?project_id=<?php echo $project_id; ?>" class="btn btn-success mt-2">Voir</a>
                 </div>
             </div>
         </div>
@@ -69,13 +89,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['selected_project'])) {
         <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
-                    <h3 class="card-title">Member</h3>
+                    <h3 class="card-title">Équipe : <?php echo htmlspecialchars($members[0]['team_name']); ?></h3>
                     <table class="table">
                         <thead>
                             <tr>
                                 <th>Nom</th>
                                 <th>Email</th>
-                                <th>Rôle</th>
+                                <th>Poste</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -83,7 +103,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['selected_project'])) {
                                 <tr>
                                     <td><?php echo htmlspecialchars($member['prenom']) . ' ' . htmlspecialchars($member['nom']); ?></td>
                                     <td><?php echo htmlspecialchars($member['email']); ?></td>
-                                    <td><?php echo htmlspecialchars($member['role']); ?></td>
+                                    <td><?php echo htmlspecialchars($member['post']); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -98,7 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['selected_project'])) {
             <div class="card text-center">
                 <div class="card-body">
                     <h3 class="card-title">Messagerie</h3>
-                    <a href="messages/index.php" class="btn btn-dark mt-2">Manage</a>
+                    <a href="messages/index.php?project_id=<?php echo $project_id; ?>" class="btn btn-dark mt-2">Gérer</a>
                 </div>
             </div>
         </div>
@@ -106,11 +126,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['selected_project'])) {
         <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
-                    <h3 class="card-title">Task</h3>
+                    <h3 class="card-title">Liste des Tâches</h3>
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Task</th>
+                                <th>Tâche</th>
                                 <th>Statut</th>
                             </tr>
                         </thead>

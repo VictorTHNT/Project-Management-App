@@ -9,11 +9,14 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-$user_role = $_SESSION['user_role'];
+$user_role = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : '';
 
-// Vérifier si l'utilisateur a le rôle de "manager" ou "admin"
-if ($user_role !== 'manager' && $user_role !== 'admin') {
-    echo "Accès refusé. Vous n'avez pas les autorisations nécessaires pour créer un projet.";
+// Fetch existing teams
+try {
+    $teamsStmt = $pdo->query("SELECT DISTINCT team_name FROM User_Team");
+    $existingTeams = $teamsStmt->fetchAll(PDO::FETCH_COLUMN);
+} catch (PDOException $e) {
+    echo "Erreur : " . $e->getMessage();
     exit;
 }
 
@@ -23,29 +26,68 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $start_date = $_POST['start_date'];
     $end_date = $_POST['end_date'];
     $budget = $_POST['budget'];
-    $emails = $_POST['emails'];
+    $color = $_POST['color'];
+    $team_option = $_POST['team_option'];
+    $team_name = isset($_POST['team_name']) ? $_POST['team_name'] : '';
+    $new_team_name = $_POST['new_team_name'];
+    $emails = isset($_POST['emails']) ? $_POST['emails'] : [];
+    $posts = isset($_POST['posts']) ? $_POST['posts'] : [];
+
+    // Handle file upload
+    $uploadDir = 'upload/';
+    $cahierCharge = $_FILES['cahier_charge'];
+    $cahierChargePath = '';
+
+    if ($cahierCharge['error'] === UPLOAD_ERR_OK) {
+        $cahierChargeName = basename($cahierCharge['name']);
+        $cahierChargePath = $uploadDir . $cahierChargeName;
+        if (!move_uploaded_file($cahierCharge['tmp_name'], $cahierChargePath)) {
+            echo "Erreur lors du téléversement du fichier.";
+            exit;
+        }
+    } else {
+        echo "Erreur lors du téléversement du fichier.";
+        exit;
+    }
 
     try {
-        // Insérer le projet avec l'utilisateur connecté comme manager
-        $stmt = $pdo->prepare("INSERT INTO Projects (title, description, start_date, end_date, budget, manager_id) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$title, $description, $start_date, $end_date, $budget, $user_id]);
+        $pdo->beginTransaction();
 
-        // Récupérer l'ID du projet inséré
+        // Insérer le projet
+        $stmt = $pdo->prepare("INSERT INTO Projects (title, description, start_date, end_date, budget, color, cahier_charge, manager_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$title, $description, $start_date, $end_date, $budget, $color, $cahierChargePath, $user_id]);
         $project_id = $pdo->lastInsertId();
 
-        // Insérer les membres du projet dans la table User_Team
-        foreach ($emails as $email) {
-            $stmt = $pdo->prepare("SELECT id FROM Users WHERE email = ?");
-            $stmt->execute([$email]);
-            $user = $stmt->fetch();
-            if ($user) {
-                $stmt = $pdo->prepare("INSERT INTO User_Team (project_id, user_id) VALUES (?, ?)");
-                $stmt->execute([$project_id, $user['id']]);
+        if ($team_option == 'existing' && $team_name) {
+            // Utiliser une équipe existante et lier les membres existants au nouveau projet
+            $stmt = $pdo->prepare("INSERT INTO User_Team (team_name, project_id, user_id, post) 
+                                   SELECT team_name, ?, user_id, post FROM User_Team 
+                                   WHERE team_name = ?");
+            $stmt->execute([$project_id, $team_name]);
+        } elseif ($team_option == 'new' && $new_team_name) {
+            // Créer une nouvelle équipe
+            for ($i = 0; $i < count($emails); $i++) {
+                $email = $emails[$i];
+                $post = $posts[$i];
+
+                // Récupérer l'ID de l'utilisateur par email
+                $userStmt = $pdo->prepare("SELECT id FROM Users WHERE email = ?");
+                $userStmt->execute([$email]);
+                $user = $userStmt->fetch();
+
+                if ($user) {
+                    $stmt = $pdo->prepare("INSERT INTO User_Team (team_name, project_id, user_id, post) 
+                                           VALUES (?, ?, ?, ?)");
+                    $stmt->execute([$new_team_name, $project_id, $user['id'], $post]);
+                }
             }
         }
 
-        echo "Projet créé avec succès!";
+        $pdo->commit();
+        header("Location: ../index.php?selected_project=" . $project_id);
+        exit;
     } catch (PDOException $e) {
+        $pdo->rollBack();
         echo "Erreur : " . $e->getMessage();
     }
 }
@@ -55,16 +97,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Créer un projet</title>
+    <title>Créer un Projet</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../../assets/css/style.css" rel="stylesheet">
 </head>
 <body>
 <div class="container mt-5">
-    <h1>Créer un projet</h1>
-    <form method="POST">
+    <h1 class="text-center">Créer un Projet</h1>
+    <form method="POST" action="create.php" id="projectForm" enctype="multipart/form-data">
         <div class="mb-3">
-            <label for="title" class="form-label">Titre</label>
+            <label for="title" class="form-label">Titre du Projet</label>
             <input type="text" class="form-control" id="title" name="title" required>
         </div>
         <div class="mb-3">
@@ -72,39 +115,91 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
         </div>
         <div class="mb-3">
-            <label for="start_date" class="form-label">Date de début</label>
+            <label for="start_date" class="form-label">Date de Début</label>
             <input type="date" class="form-control" id="start_date" name="start_date" required>
         </div>
         <div class="mb-3">
-            <label for="end_date" class="form-label">Date de fin</label>
+            <label for="end_date" class="form-label">Date de Fin</label>
             <input type="date" class="form-control" id="end_date" name="end_date" required>
         </div>
         <div class="mb-3">
             <label for="budget" class="form-label">Budget</label>
-            <input type="number" step="0.01" class="form-control" id="budget" name="budget" required>
+            <input type="number" class="form-control" id="budget" name="budget" step="0.01" required>
         </div>
         <div class="mb-3">
-            <label for="emails" class="form-label">Membres du projet</label>
-            <div id="email-fields">
-                <input type="email" class="form-control mb-2" name="emails[]" placeholder="Email du membre" required>
-            </div>
-            <button type="button" class="btn btn-secondary" onclick="addEmailField()">Ajouter un membre</button>
+            <label for="color" class="form-label">Couleur du Projet</label>
+            <input type="color" class="form-control" id="color" name="color" required>
         </div>
-        <button type="submit" class="btn btn-primary">Créer</button>
+        <div class="mb-3">
+            <label for="cahier_charge" class="form-label">Cahier des Charges</label>
+            <input type="file" class="form-control" id="cahier_charge" name="cahier_charge" accept=".pdf,.doc,.docx" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Option d'équipe</label>
+            <div>
+                <input type="radio" id="existingTeamOption" name="team_option" value="existing" required>
+                <label for="existingTeamOption">Utiliser une équipe existante</label>
+            </div>
+            <div>
+                <input type="radio" id="newTeamOption" name="team_option" value="new" required>
+                <label for="newTeamOption">Créer une nouvelle équipe</label>
+            </div>
+        </div>
+        <div id="existingTeamSection" style="display:none;">
+            <div class="mb-3">
+                <label class="form-label">Nom de l'Équipe</label>
+                <select class="form-select" id="team_name" name="team_name">
+                    <option value="">Sélectionnez une équipe</option>
+                    <?php foreach ($existingTeams as $team): ?>
+                        <option value="<?php echo htmlspecialchars($team); ?>"><?php echo htmlspecialchars($team); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        <div id="newTeamSection" style="display:none;">
+            <div class="mb-3">
+                <label class="form-label">Nom de la Nouvelle Équipe</label>
+                <input type="text" class="form-control" id="new_team_name" name="new_team_name">
+            </div>
+            <h4>Ajouter des Membres à la Nouvelle Équipe</h4>
+            <div id="teamMembers">
+                <div class="mb-3">
+                    <label class="form-label">Email du Membre</label>
+                    <input type="email" class="form-control email-input" name="emails[]" required>
+                    <label class="form-label">Poste</label>
+                    <input type="text" class="form-control" name="posts[]" required>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="addMember">Ajouter un Membre</button>
+        </div>
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary">Créer le Projet</button>
+        </div>
     </form>
 </div>
 
 <script>
-function addEmailField() {
-    const emailFields = document.getElementById('email-fields');
-    const newField = document.createElement('input');
-    newField.type = 'email';
-    newField.className = 'form-control mb-2';
-    newField.name = 'emails[]';
-    newField.placeholder = 'Email du membre';
-    newField.required = true;
-    emailFields.appendChild(newField);
-}
+document.getElementById('existingTeamOption').addEventListener('click', function() {
+    document.getElementById('existingTeamSection').style.display = 'block';
+    document.getElementById('newTeamSection').style.display = 'none';
+});
+
+document.getElementById('newTeamOption').addEventListener('click', function() {
+    document.getElementById('existingTeamSection').style.display = 'none';
+    document.getElementById('newTeamSection').style.display = 'block';
+});
+
+document.getElementById('addMember').addEventListener('click', function() {
+    var memberDiv = document.createElement('div');
+    memberDiv.classList.add('mb-3');
+    memberDiv.innerHTML = `
+        <label class="form-label">Email du Membre</label>
+        <input type="email" class="form-control email-input" name="emails[]" required>
+        <label class="form-label">Poste</label>
+        <input type="text" class="form-control" name="posts[]" required>
+    `;
+    document.getElementById('teamMembers').appendChild(memberDiv);
+});
 </script>
 </body>
 </html>
