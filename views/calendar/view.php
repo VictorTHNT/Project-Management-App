@@ -9,18 +9,31 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-function getProjects($pdo, $user_id) {
+function getProjectsAndEvents($pdo, $user_id) {
+    // Fetching projects
     $stmt = $pdo->prepare("
-        SELECT p.title, DATE_FORMAT(p.start_date, '%Y-%m-%d') as start, 
+        SELECT p.id, p.title, DATE_FORMAT(p.start_date, '%Y-%m-%d') as start, 
                DATE_FORMAT(p.end_date, '%Y-%m-%d') as end, p.color
         FROM projects p
         WHERE p.manager_id = :user_id
     ");
     $stmt->execute(['user_id' => $user_id]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Fetching personal events
+    $stmt = $pdo->prepare("
+        SELECT e.id, e.title, DATE_FORMAT(e.start_date, '%Y-%m-%dT%H:%i:%s') as start, 
+               DATE_FORMAT(e.end_date, '%Y-%m-%dT%H:%i:%s') as end, '#ff00ff' as color
+        FROM calendar_events e
+        WHERE e.user_id = :user_id
+    ");
+    $stmt->execute(['user_id' => $user_id]);
+    $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    return array_merge($projects, $events);
 }
 
-$projects = getProjects($pdo, $user_id);
+$events = getProjectsAndEvents($pdo, $user_id);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -63,7 +76,10 @@ $projects = getProjects($pdo, $user_id);
 <body>
     <?php include '../../includes/navbar.php'; // Include the navigation bar ?>
     <div class="container">
-        <h2 class="text-center mb-4">Calendrier des Projets</h2> <!-- Centered heading for the calendar page -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-center mb-0">Calendrier des Projets</h2>
+            <a href="create.php" class="btn btn-primary">Créer</a>
+        </div>
         <div id="calendar"></div>
     </div>
     <script>
@@ -78,7 +94,19 @@ $projects = getProjects($pdo, $user_id);
             defaultDate: moment().format('YYYY-MM-DD'),
             editable: true,
             eventLimit: true, // allow "more" link when too many events
-            events: <?php echo json_encode($projects); ?>
+            events: <?php echo json_encode($events); ?>,
+            eventClick: function(event) {
+                if (event.id) {
+                    window.location.href = '../../views/index.php?selected_project=' + event.id;
+                }
+            },
+            eventRender: function(event, element) {
+                if (event.allDay === false) {
+                    event.start = moment(event.start).format('YYYY-MM-DD');
+                    event.end = moment(event.end).format('YYYY-MM-DD');
+                }
+                element.find('.fc-title').html(event.title);
+            }
         });
     });
     </script>

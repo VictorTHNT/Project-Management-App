@@ -1,142 +1,198 @@
 <?php
+include 'includes/connect.php'; // Assurez-vous que ce chemin est correct
 session_start();
-include 'includes/connect.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: views/auth/login.php');
+    header('Location: auth/login.php');
     exit;
 }
 
 $user_id = $_SESSION['user_id'];
-$user_role = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : '';
 
-try {
-    if ($user_role === 'admin') {
-        // Récupérer tous les projets pour les administrateurs
-        $projectsStmt = $pdo->query("SELECT id, title, description, end_date FROM Projects");
-        $usersStmt = $pdo->query("SELECT id, nom, prenom, email, role FROM Users");
-    } else {
-        // Récupérer les projets associés à l'utilisateur connecté
-        $projectsStmt = $pdo->prepare("
-            SELECT Projects.id, Projects.title, Projects.description, Projects.end_date 
-            FROM Projects 
-            JOIN User_Team ON Projects.id = User_Team.project_id 
-            WHERE User_Team.user_id = ?
-        ");
-        $projectsStmt->execute([$user_id]);
-    }
-    $projects = $projectsStmt->fetchAll();
-    $users = isset($usersStmt) ? $usersStmt->fetchAll() : [];
-} catch (PDOException $e) {
-    echo "Erreur : " . $e->getMessage();
-    exit;
+// Récupérer les projets en cours
+$projectsStmt = $pdo->prepare("
+    SELECT p.id, p.title, p.start_date, p.end_date, p.budget, p.manager_id, 
+           CONCAT(u.prenom, ' ', u.nom) as manager_name,
+           (SELECT COUNT(*) FROM Tasks t WHERE t.project_id = p.id) as total_tasks,
+           (SELECT COUNT(*) FROM Tasks t WHERE t.project_id = p.id AND t.status = 'completed') as completed_tasks
+    FROM Projects p
+    JOIN Users u ON p.manager_id = u.id
+    WHERE p.end_date >= NOW()
+    ORDER BY p.start_date
+");
+$projectsStmt->execute();
+$projects = $projectsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Calcul des indicateurs clés
+$totalProjects = count($projects);
+$totalProgress = 0;
+$totalDelay = 0;
+foreach ($projects as $project) {
+    $totalProgress += ($project['total_tasks'] > 0) ? ($project['completed_tasks'] / $project['total_tasks']) * 100 : 0;
+    $totalDelay += (new DateTime($project['end_date']) < new DateTime()) ? 1 : 0;
 }
+$averageProgress = ($totalProjects > 0) ? $totalProgress / $totalProjects : 0;
+
+// Récupérer les tâches en retard
+$tasksStmt = $pdo->prepare("
+    SELECT t.title, t.end_date, p.title as project_title
+    FROM Tasks t
+    JOIN Projects p ON t.project_id = p.id
+    WHERE t.end_date < NOW() AND t.status != 'completed'
+");
+$tasksStmt->execute();
+$overdueTasks = $tasksStmt->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="assets/css/style.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <title>Tableau de Bord</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.0/fullcalendar.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.0/fullcalendar.min.js"></script>
 </head>
 <body>
-<?php include 'includes/navbar.php'; ?>
-
 <div class="container mt-5">
-    <h1 class="text-center">Dashboard</h1>
-
-    <!-- Projects Section -->
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5>Projets</h5>
-        </div>
-        <div class="card-body">
-            <?php if (count($projects) > 0): ?>
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th scope="col">Nom du projet</th>
-                            <th scope="col">Description</th>
-                            <th scope="col">Date de fin</th>
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($projects as $project): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($project['title']); ?></td>
-                                <td><?php echo htmlspecialchars($project['description']); ?></td>
-                                <td><?php echo htmlspecialchars($project['end_date']); ?></td>
-                                <td>
-                                    <a href="views/index.php?project_id=<?php echo htmlspecialchars($project['id']); ?>" class="btn btn-info btn-sm">Voir</a>
-                                    <?php if ($user_role === 'admin'): ?>
-                                        <a href="views/projects/edit.php?id=<?php echo htmlspecialchars($project['id']); ?>" class="btn btn-warning btn-sm">Modifier</a>
-                                        <form method="post" action="views/projects/delete.php" class="d-inline">
-                                            <input type="hidden" name="project_id" value="<?php echo htmlspecialchars($project['id']); ?>">
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?');">Supprimer</button>
-                                        </form>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <div class="alert alert-info" role="alert">
-                    Vous n'êtes associé à aucun projet.
+    <h1 class="text-center mb-4">Tableau de Bord</h1>
+    <div class="row mb-4">
+        <!-- Indicateurs Clés -->
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title">Projets en Cours</h3>
+                    <p class="card-text"><?php echo $totalProjects; ?></p>
                 </div>
-            <?php endif; ?>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title">Avancement Moyen</h3>
+                    <p class="card-text"><?php echo round($averageProgress, 2); ?>%</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title">Projets en Retard</h3>
+                    <p class="card-text"><?php echo $totalDelay; ?></p>
+                </div>
+            </div>
         </div>
     </div>
-
-    <?php if ($user_role === 'admin'): ?>
-        <!-- Users Section for Admins -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5>Utilisateurs</h5>
-            </div>
-            <div class="card-body">
-                <?php if (count($users) > 0): ?>
-                    <table class="table table-hover">
+    <div class="row mb-4">
+        <!-- Projets en cours -->
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Projets en Cours</h3>
+                    <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Nom</th>
-                                <th scope="col">Prénom</th>
-                                <th scope="col">Email</th>
-                                <th scope="col">Rôle</th>
-                                <th scope="col">Actions</th>
+                                <th>Titre</th>
+                                <th>Créateur</th>
+                                <th>Date de Début</th>
+                                <th>Date de Fin</th>
+                                <th>Budget</th>
+                                <th>Avancement</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($users as $user): ?>
+                            <?php foreach ($projects as $project): ?>
+                                <?php
+                                    $progress = ($project['total_tasks'] > 0) ? ($project['completed_tasks'] / $project['total_tasks']) * 100 : 0;
+                                    $progressClass = ($progress < 50) ? 'bg-danger' : (($progress < 80) ? 'bg-warning' : 'bg-success');
+                                ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($user['nom']); ?></td>
-                                    <td><?php echo htmlspecialchars($user['prenom']); ?></td>
-                                    <td><?php echo htmlspecialchars($user['email']); ?></td>
-                                    <td><?php echo htmlspecialchars($user['role']); ?></td>
+                                    <td><?php echo htmlspecialchars($project['title']); ?></td>
+                                    <td><?php echo htmlspecialchars($project['manager_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($project['start_date']); ?></td>
+                                    <td><?php echo htmlspecialchars($project['end_date']); ?></td>
+                                    <td><?php echo htmlspecialchars($project['budget']); ?></td>
                                     <td>
-                                        <a href="views/users/edit.php?id=<?php echo htmlspecialchars($user['id']); ?>" class="btn btn-warning btn-sm">Modifier</a>
-                                        <form method="post" action="views/users/delete.php" class="d-inline">
-                                            <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($user['id']); ?>">
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?');">Supprimer</button>
-                                        </form>
+                                        <div class="progress">
+                                            <div class="progress-bar <?php echo $progressClass; ?>" role="progressbar" style="width: <?php echo $progress; ?>%;" aria-valuenow="<?php echo $progress; ?>" aria-valuemin="0" aria-valuemax="100"><?php echo round($progress); ?>%</div>
+                                        </div>
                                     </td>
+                                    <td><a href="index.php?selected_project=<?php echo $project['id']; ?>" class="btn btn-primary btn-sm">Voir</a></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                <?php else: ?>
-                    <div class="alert alert-info" role="alert">
-                        Aucun utilisateur trouvé.
-                    </div>
-                <?php endif; ?>
+                </div>
             </div>
         </div>
-    <?php endif; ?>
+    </div>
+    <div class="row mb-4">
+        <!-- Calendrier -->
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Calendrier des Projets</h3>
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <!-- Alertes -->
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Tâches en Retard</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Tâche</th>
+                                <th>Projet</th>
+                                <th>Date d'Échéance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($overdueTasks as $task): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($task['title']); ?></td>
+                                    <td><?php echo htmlspecialchars($task['project_title']); ?></td>
+                                    <td><?php echo htmlspecialchars($task['end_date']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    $('#calendar').fullCalendar({
+        header: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'month,agendaWeek,agendaDay'
+        },
+        defaultView: 'month',
+        defaultDate: moment().format('YYYY-MM-DD'),
+        editable: false,
+        eventLimit: true,
+        events: <?php echo json_encode($projects); ?>,
+        eventClick: function(event) {
+            if (event.id) {
+                window.location.href = 'index.php?selected_project=' + event.id;
+            }
+        }
+    });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
