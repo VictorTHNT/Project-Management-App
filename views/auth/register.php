@@ -1,6 +1,6 @@
 <?php
 // register.php
-require 'db.php';
+require '../../includes/connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nom = $_POST['nom'];
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <button type="submit">Register</button>
             </div>
         </form>
-        <p>Already have an account? <a href="login.php">Login here</a>.</p>
+        <p>Already have an account? <a href="./login.php">Login here</a>.</p>
     </div>
 </body>
 </html>

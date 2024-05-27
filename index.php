@@ -21,5 +21,14 @@ include 'includes/navbar.php';
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+
+    <?php if (isset($_SESSION['nom'])): ?>
+        <p>Hello, <?php echo htmlspecialchars($_SESSION['nom'] . ' ' . $_SESSION['prenom']); ?>!</p>
+        <a href="./includes/logout.php">Logout</a>
+    <?php else: ?>
+        <a href="./views/auth/login.php">Login</a>
+        <a href="./views/auth/register.php">Register</a>
+    <?php endif; ?>
+    
 </body>
 </html>
