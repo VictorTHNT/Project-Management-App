@@ -31,6 +31,17 @@ try {
     $tasksStmt = $pdo->prepare("SELECT * FROM Tasks WHERE project_id = ?");
     $tasksStmt->execute([$project_id]);
     $tasks = $tasksStmt->fetchAll();
+
+    // Calcul de la progression des tâches
+    $totalTasks = count($tasks);
+    $completedTasks = 0;
+    foreach ($tasks as $task) {
+        if ($task['status'] == 'completed') {
+            $completedTasks++;
+        }
+    }
+    $progress = $totalTasks > 0 ? ($completedTasks / $totalTasks) * 100 : 0;
+
 } catch (Exception $e) {
     echo "Erreur : " . $e->getMessage();
     exit;
@@ -108,6 +119,19 @@ try {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <!-- Progress Bar Section -->
+        <div class="col-md-12">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title">Progression du Projet</h3>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: <?php echo $progress; ?>%;" aria-valuenow="<?php echo $progress; ?>" aria-valuemin="0" aria-valuemax="100"><?php echo round($progress); ?>%</div>
+                    </div>
                 </div>
             </div>
         </div>
