@@ -1,6 +1,6 @@
 <?php
 include '../../includes/connect.php';
-session_start();
+include '../../includes/navbar.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../views/auth/login.php");
@@ -10,6 +10,21 @@ if (!isset($_SESSION['user_id'])) {
 $project_id = $_GET['project_id'];
 $user_id = $_SESSION['user_id'];
 $uploadDir = '../../assets/upload/';
+
+// Récupérer le nom du projet
+$project_name = '';
+try {
+    $stmt = $pdo->prepare("SELECT title FROM projects WHERE id = ?");
+    $stmt->execute([$project_id]);
+    $project = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($project) {
+        $project_name = $project['title'];
+    } else {
+        $error = "Projet introuvable.";
+    }
+} catch (PDOException $e) {
+    $error = "Erreur : " . $e->getMessage();
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["file"])) {
     $fileName = basename($_FILES["file"]["name"]);
@@ -61,7 +76,7 @@ try {
 </head>
 <body>
 <div class="container mt-5">
-    <h1 class="text-center">Téléverser des Fichiers pour le Projet <?php echo htmlspecialchars($project_id); ?></h1>
+    <h1 class="text-center">Téléverser des Fichiers pour le Projet <?php echo htmlspecialchars($project_name); ?></h1>
     <?php if (isset($success)): ?>
         <div class="alert alert-success"><?php echo $success; ?></div>
     <?php elseif (isset($error)): ?>
@@ -112,6 +127,7 @@ try {
         </ul>
     </div>
 </div>
+<?php include '../../includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"></script>
 </body>
 </html>

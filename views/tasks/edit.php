@@ -1,22 +1,35 @@
 <?php
 include '../../includes/connect.php';
-session_start();
+include '../../includes/navbar.php';
 
-// Vérification de la connexion de l'utilisateur
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../../views/auth/login.php");
-    exit;
-}
-
-// Vérification de l'ID de la tâche
-if (!isset($_GET['id'])) {
+if (!isset($_GET['task_id'])) {
     echo "ID de tâche manquant.";
     exit;
 }
 
-$task_id = $_GET['id'];
+$task_id = $_GET['task_id'];
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+try {
+    // Récupérer les informations de la tâche
+    $taskStmt = $pdo->prepare("SELECT * FROM Tasks WHERE id = ?");
+    $taskStmt->execute([$task_id]);
+    $task = $taskStmt->fetch();
+
+    if (!$task) {
+        echo "Tâche introuvable.";
+        exit;
+    }
+
+    // Récupérer les utilisateurs pour la sélection d'assignation
+    $usersStmt = $pdo->query("SELECT id, nom, prenom FROM Users");
+    $users = $usersStmt->fetchAll();
+
+} catch (Exception $e) {
+    echo "Erreur : " . $e->getMessage();
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'];
     $description = $_POST['description'];
     $status = $_POST['status'];
@@ -25,23 +38,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $assignee_id = $_POST['assignee_id'];
 
     try {
-        $stmt = $pdo->prepare("UPDATE Tasks SET title = ?, description = ?, status = ?, start_date = ?, end_date = ?, assignee_id = ? WHERE id = ?");
-        $stmt->execute([$title, $description, $status, $start_date, $end_date, $assignee_id, $task_id]);
-        header("Location: view.php");
-        exit;
-    } catch (PDOException $e) {
-        echo "Erreur : " . $e->getMessage();
-    }
-} else {
-    try {
-        $stmt = $pdo->prepare("SELECT * FROM Tasks WHERE id = ?");
-        $stmt->execute([$task_id]);
-        $task = $stmt->fetch();
+        // Mettre à jour les informations de la tâche
+        $updateStmt = $pdo->prepare("UPDATE Tasks SET title = ?, description = ?, status = ?, start_date = ?, end_date = ?, assignee_id = ? WHERE id = ?");
+        $updateStmt->execute([$title, $description, $status, $start_date, $end_date, $assignee_id, $task_id]);
 
-        $usersStmt = $pdo->query("SELECT id, nom, prenom FROM Users");
-        $users = $usersStmt->fetchAll();
-    } catch (PDOException $e) {
-        echo "Erreur : " . $e->getMessage();
+        echo "Tâche mise à jour avec succès.";
+        header("Location: ../../dashboard_admin.php?selected_project=" . $task['project_id']); // Rediriger vers la page du projet
+        exit;
+    } catch (Exception $e) {
+        echo "Erreur lors de la mise à jour de la tâche : " . $e->getMessage();
     }
 }
 ?>
@@ -50,16 +55,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Modifier la tâche</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <title>Modifier Tâche</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 <div class="container mt-5">
-    <h1>Modifier la tâche</h1>
-    <form method="POST">
+    <h1 class="text-center mb-4">Modifier Tâche</h1>
+    <form method="post">
         <div class="mb-3">
-            <label for="title" class="form-label">Titre</label>
+            <label for="title" class="form-label">Titre de la Tâche</label>
             <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($task['title']); ?>" required>
         </div>
         <div class="mb-3">
@@ -69,24 +73,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="mb-3">
             <label for="status" class="form-label">Statut</label>
             <select class="form-select" id="status" name="status" required>
-                <option value="pending" <?php if ($task['status'] == 'pending') echo 'selected'; ?>>En attente</option>
-                <option value="in_progress" <?php if ($task['status'] == 'in_progress') echo 'selected'; ?>>En cours</option>
-                <option value="completed" <?php if ($task['status'] == 'completed') echo 'selected'; ?>>Terminé</option>
+                <option value="pending" <?php if ($task['status'] == 'pending') echo 'selected'; ?>>Pending</option>
+                <option value="in_progress" <?php if ($task['status'] == 'in_progress') echo 'selected'; ?>>In Progress</option>
+                <option value="completed" <?php if ($task['status'] == 'completed') echo 'selected'; ?>>Completed</option>
             </select>
         </div>
         <div class="mb-3">
-            <label for="start_date" class="form-label">Date de début</label>
+            <label for="start_date" class="form-label">Date de Début</label>
             <input type="date" class="form-control" id="start_date" name="start_date" value="<?php echo htmlspecialchars($task['start_date']); ?>" required>
         </div>
         <div class="mb-3">
-            <label for="end_date" class="form-label">Date de fin</label>
+            <label for="end_date" class="form-label">Date de Fin</label>
             <input type="date" class="form-control" id="end_date" name="end_date" value="<?php echo htmlspecialchars($task['end_date']); ?>" required>
         </div>
         <div class="mb-3">
-            <label for="assignee_id" class="form-label">Attribué à</label>
+            <label for="assignee_id" class="form-label">Assigner à</label>
             <select class="form-select" id="assignee_id" name="assignee_id" required>
                 <?php foreach ($users as $user): ?>
-                    <option value="<?php echo htmlspecialchars($user['id']); ?>" <?php if ($user['id'] == $task['assignee_id']) echo 'selected'; ?>>
+                    <option value="<?php echo $user['id']; ?>" <?php if ($user['id'] == $task['assignee_id']) echo 'selected'; ?>>
                         <?php echo htmlspecialchars($user['prenom'] . ' ' . $user['nom']); ?>
                     </option>
                 <?php endforeach; ?>
@@ -95,5 +99,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <button type="submit" class="btn btn-primary">Mettre à jour</button>
     </form>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<?php include '../../includes/footer.php'; ?>
+
 </body>
 </html>

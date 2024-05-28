@@ -1,6 +1,6 @@
 <?php
-session_start();
-require_once '../../includes/connect.php';
+include '../../includes/connect.php';
+include '../../includes/navbar.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../../auth/login.php');
@@ -10,12 +10,13 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 function getProjectsAndEvents($pdo, $user_id) {
-    // Fetching projects
+    // Fetching projects associated with the user
     $stmt = $pdo->prepare("
         SELECT p.id, p.title, DATE_FORMAT(p.start_date, '%Y-%m-%d') as start, 
                DATE_FORMAT(p.end_date, '%Y-%m-%d') as end, p.color
         FROM projects p
-        WHERE p.manager_id = :user_id
+        JOIN user_team ut ON p.id = ut.project_id
+        WHERE ut.user_id = :user_id
     ");
     $stmt->execute(['user_id' => $user_id]);
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -74,7 +75,6 @@ $events = getProjectsAndEvents($pdo, $user_id);
     </style>
 </head>
 <body>
-    <?php include '../../includes/navbar.php'; // Include the navigation bar ?>
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="text-center mb-0">Calendrier des Projets</h2>
@@ -110,5 +110,6 @@ $events = getProjectsAndEvents($pdo, $user_id);
         });
     });
     </script>
+
 </body>
 </html>

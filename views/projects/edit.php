@@ -1,6 +1,6 @@
 <?php
 include '../../includes/connect.php';
-session_start();
+include '../../includes/navbar.php';
 
 // Vérification de la connexion de l'utilisateur
 if (!isset($_SESSION['user_id'])) {
@@ -18,20 +18,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try {
             $pdo->beginTransaction();
 
+            // Supprimer les commentaires sur les fichiers associés au projet
+            $stmt = $pdo->prepare("DELETE FROM file_comments WHERE file_id IN (SELECT id FROM files WHERE project_id = ?)");
+            $stmt->execute([$project_id]);
+
+            // Supprimer les fichiers associés au projet
+            $stmt = $pdo->prepare("DELETE FROM files WHERE project_id = ?");
+            $stmt->execute([$project_id]);
+
+            // Supprimer les notifications associées au projet
+            $stmt = $pdo->prepare("DELETE FROM notifications WHERE project_id = ?");
+            $stmt->execute([$project_id]);
+
             // Supprimer les messages associés au projet
-            $stmt = $pdo->prepare("DELETE FROM Messages WHERE project_id = ?");
+            $stmt = $pdo->prepare("DELETE FROM messages WHERE project_id = ?");
             $stmt->execute([$project_id]);
 
             // Supprimer les tâches associées au projet
-            $stmt = $pdo->prepare("DELETE FROM Tasks WHERE project_id = ?");
+            $stmt = $pdo->prepare("DELETE FROM tasks WHERE project_id = ?");
             $stmt->execute([$project_id]);
 
             // Supprimer les membres de l'équipe associés au projet
-            $stmt = $pdo->prepare("DELETE FROM User_Team WHERE project_id = ?");
+            $stmt = $pdo->prepare("DELETE FROM user_team WHERE project_id = ?");
+            $stmt->execute([$project_id]);
+
+            // Supprimer les événements de calendrier associés au projet
+            $stmt = $pdo->prepare("DELETE FROM calendar_events WHERE project_id = ?");
             $stmt->execute([$project_id]);
 
             // Supprimer les cahiers de charge associés au projet
-            $stmt = $pdo->prepare("SELECT cahier_charge FROM Projects WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT cahier_charge FROM projects WHERE id = ?");
             $stmt->execute([$project_id]);
             $cahier_charge = $stmt->fetchColumn();
             if ($cahier_charge) {
@@ -39,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             // Supprimer le projet
-            $stmt = $pdo->prepare("DELETE FROM Projects WHERE id = ?");
+            $stmt = $pdo->prepare("DELETE FROM projects WHERE id = ?");
             $stmt->execute([$project_id]);
 
             $pdo->commit();
@@ -55,12 +71,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $post = $_POST['post'];
 
         try {
-            $stmt = $pdo->prepare("SELECT id FROM Users WHERE email = ?");
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
             if ($user) {
-                $stmt = $pdo->prepare("INSERT INTO User_Team (project_id, user_id, post) VALUES (?, ?, ?)");
+                $stmt = $pdo->prepare("INSERT INTO user_team (project_id, user_id, post) VALUES (?, ?, ?)");
                 $stmt->execute([$project_id, $user['id'], $post]);
             } else {
                 echo "Utilisateur non trouvé.";
@@ -73,7 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user_id = $_POST['user_id'];
 
         try {
-            $stmt = $pdo->prepare("DELETE FROM User_Team WHERE project_id = ? AND user_id = ?");
+            $stmt = $pdo->prepare("DELETE FROM user_team WHERE project_id = ? AND user_id = ?");
             $stmt->execute([$project_id, $user_id]);
         } catch (PDOException $e) {
             echo "Erreur : " . $e->getMessage();
@@ -93,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $pdo->beginTransaction();
 
             // Mise à jour des informations du projet
-            $stmt = $pdo->prepare("UPDATE Projects SET title = ?, description = ?, start_date = ?, end_date = ?, budget = ?, color = ? WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE projects SET title = ?, description = ?, start_date = ?, end_date = ?, budget = ?, color = ? WHERE id = ?");
             $stmt->execute([$title, $description, $start_date, $end_date, $budget, $color, $project_id]);
 
             // Gestion du cahier de charge
@@ -109,7 +125,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 move_uploaded_file($_FILES["cahier_charge"]["tmp_name"], $target_file);
 
                 // Mettre à jour la base de données avec le nom du nouveau fichier
-                $stmt = $pdo->prepare("UPDATE Projects SET cahier_charge = ? WHERE id = ?");
+                $stmt = $pdo->prepare("UPDATE projects SET cahier_charge = ? WHERE id = ?");
                 $stmt->execute([$cahier_charge, $project_id]);
             }
 
@@ -128,7 +144,7 @@ if (isset($_GET['id'])) {
     $project_id = $_GET['id'];
 
     try {
-        $stmt = $pdo->prepare("SELECT * FROM Projects WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT * FROM projects WHERE id = ?");
         $stmt->execute([$project_id]);
         $project = $stmt->fetch();
 
@@ -138,10 +154,10 @@ if (isset($_GET['id'])) {
 
         // Récupérer les membres de l'équipe
         $stmt = $pdo->prepare("
-            SELECT Users.id, Users.email, User_Team.post 
-            FROM Users 
-            JOIN User_Team ON Users.id = User_Team.user_id 
-            WHERE User_Team.project_id = ?
+            SELECT users.id, users.email, user_team.post 
+            FROM users 
+            JOIN user_team ON users.id = user_team.user_id 
+            WHERE user_team.project_id = ?
         ");
         $stmt->execute([$project_id]);
         $team_members = $stmt->fetchAll();
@@ -246,5 +262,6 @@ if (isset($_GET['id'])) {
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<?php include '../../includes/footer.php'; ?>
 </body>
 </html>

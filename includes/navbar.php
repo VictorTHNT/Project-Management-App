@@ -1,83 +1,88 @@
-<!DOCTYPE html>
-<html lang="fr">
+<?php
+session_start();
+include $_SERVER['DOCUMENT_ROOT'].'/Project-Management-App/includes/connect.php';
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application de Gestion de Projet</title>
-    <!-- Include Bootstrap CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
+// Vérifiez si l'utilisateur est connecté
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../views/auth/login.php');
+    exit;
+}
 
-        .navbar {
-            background-color: #cccccc;
-            /* Gray bar color */
-        }
+// Récupérez les informations de l'utilisateur connecté
+$user_id = $_SESSION['user_id'];
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->execute([$user_id]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        .navbar .navbar-brand img {
-            height: 50px;
-            /* Adjust size as needed */
-        }
+// Récupérer les notifications non lues
+$notificationsStmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC");
+$notificationsStmt->execute([$user_id]);
+$notifications = $notificationsStmt->fetchAll();
+$notificationCount = count($notifications);
 
-        .profile-photo {
-            height: 40px;
-            /* Adjust size as needed */
-            width: 40px;
-            border-radius: 50%;
-        }
+// Définir les variables pour le nom et la photo de profil
+$user_name = htmlspecialchars($user['nom'] . ' ' . $user['prenom']);
+$profile_image = !empty($user['profile']) ? $user['profile'] : 'assets/images/default-profile.png';
 
-        .content {
-            padding: 20px;
-        }
-    </style>
-</head>
+// Vérifier si l'image existe, sinon utiliser une image par défaut
+if (!file_exists($_SERVER['DOCUMENT_ROOT'] . '/Project-Management-App/' . $profile_image)) {
+    $profile_image = 'assets/images/default-profile.png';
+}
+?>
 
-<body>
-    <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#"><img src="assets/images/VAAL LOGO BLANC.png" alt="Logo"></a> <!-- Replace with the path to your logo -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">Dashbord</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Project
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Action</a></li>
-                            <li><a class="dropdown-item" href="#">Another action</a></li>
-                            <li><a class="dropdown-item" href="#">Something else here</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Task</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Calendar</a>
-                    </li>
-                </ul>
-                <div class="ml-auto">
-                    <img src="assets/images/CV Anice Chakir.png" alt="Profile Photo" class="profile-photo"> <!-- Replace with the path to your profile photo -->
-                </div>
-            </div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/Project-Management-App/index.php">
+            <img src="/Project-Management-App/assets/images/logo_white.png" alt="Logo" width="30" height="30" class="d-inline-block align-top">
+            CAPTECH
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/Project-Management-App/dashboard.php">Accueil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Project-Management-App/views/projects/view.php">Projets</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Project-Management-App/views/tasks/view.php">Tâches</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Project-Management-App/views/calendar/view.php">Calendrier</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Notifications <span class="badge bg-danger"><?php echo $notificationCount; ?></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown">
+                        <?php if ($notificationCount > 0): ?>
+                            <?php foreach ($notifications as $notification): ?>
+                                <li>
+                                    <a class="dropdown-item" href="/Project-Management-App/views/notifications/handle.php?id=<?php echo $notification['id']; ?>">
+                                        <?php echo htmlspecialchars($notification['message']); ?>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <li><span class="dropdown-item">Aucune notification</span></li>
+                        <?php endif; ?>
+                    </ul>
+                </li>
+                <li class="nav-item d-flex align-items-center">
+                    <img src="/Project-Management-App/<?php echo htmlspecialchars($profile_image); ?>" alt="Profile Image" width="30" height="30" class="rounded-circle me-2">
+                    <span class="navbar-text">
+                    <a href="/Project-Management-App/views/auth/profile.php"><?php echo $user_name; ?></a>
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Project-Management-App/includes/logout.php">Déconnexion</a>
+                </li>
+            </ul>
         </div>
-    </nav>
-    <div class="content">
-        <h1>Bienvenue dans l'application de gestion de projet</h1>
     </div>
-
-    <!-- Include Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-
-</html>
+</nav>

@@ -1,6 +1,6 @@
 <?php
-session_start();
 include '../../includes/connect.php';
+include '../../includes/navbar.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../auth/login.php');
@@ -160,5 +160,7 @@ try {
         setTimeout(scrollToBottom, 100);
     });
 </script>
+<?php include '../../includes/footer.php'; ?>
+
 </body>
 </html>

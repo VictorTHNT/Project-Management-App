@@ -1,6 +1,6 @@
 <?php
-session_start();
-require_once '../../includes/connect.php';
+include '../../includes/connect.php';
+include '../../includes/navbar.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../../auth/login.php');
@@ -119,6 +119,7 @@ document.getElementById('is_shared').addEventListener('change', function() {
     }
 });
 </script>
+<?php include '../../includes/footer.php' ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

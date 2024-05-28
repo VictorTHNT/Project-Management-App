@@ -1,6 +1,6 @@
 <?php
 include '../../includes/connect.php';
-session_start();
+include '../../includes/navbar.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
@@ -30,11 +30,34 @@ try {
         $assignee_id = $_POST['assignee_id'];
         $selected_project_id = $project_id ?: $_POST['project_id'];
 
-        $stmt = $pdo->prepare("INSERT INTO Tasks (title, description, status, start_date, end_date, project_id, assignee_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$title, $description, $status, $start_date, $end_date, $selected_project_id, $assignee_id]);
+        $pdo->beginTransaction();
 
-        header("Location: view.php?project_id=" . $selected_project_id);
-        exit;
+        try {
+            $stmt = $pdo->prepare("INSERT INTO Tasks (title, description, status, start_date, end_date, project_id, assignee_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$title, $description, $status, $start_date, $end_date, $selected_project_id, $assignee_id]);
+
+            // Récupérer l'ID de la tâche créée
+            $task_id = $pdo->lastInsertId();
+
+            // Ajouter une notification pour chaque membre du projet
+            $teamStmt = $pdo->prepare("SELECT user_id FROM User_Team WHERE project_id = ?");
+            $teamStmt->execute([$selected_project_id]);
+            $teamMembers = $teamStmt->fetchAll();
+
+            foreach ($teamMembers as $member) {
+                $notificationStmt = $pdo->prepare("INSERT INTO notifications (user_id, project_id, message) VALUES (?, ?, ?)");
+                $notificationStmt->execute([$member['user_id'], $selected_project_id, 'New task created: ' . $title]);
+            }
+
+            $pdo->commit();
+
+            header("Location: view.php?project_id=" . $selected_project_id);
+            exit;
+
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 } catch (PDOException $e) {
     echo "Erreur : " . $e->getMessage();
@@ -127,5 +150,6 @@ try {
         </div>
     </form>
 </div>
+<?php include '../../includes/footer.php'; ?>
 </body>
 </html>

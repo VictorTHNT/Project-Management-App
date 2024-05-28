@@ -1,15 +1,14 @@
 <?php
-session_start(); // Démarrer la session
-
+ // Démarrer la session
+ include 'includes/connect.php';
+ include 'includes/navbar.php';
 // Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['nom']) || !isset($_SESSION['prenom'])) {
     // Rediriger vers la page de connexion
-    header('Location: ./views/auth/login.php');
+    header('Location: /Project-Management-App/views/auth/login.php');
     exit();
 }
 
-include 'includes/connect.php';
-include 'includes/navbar.php';
 ?>
 
 <!DOCTYPE html>

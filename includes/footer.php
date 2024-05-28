@@ -19,9 +19,9 @@
             flex: 1;
         }
         .footer {
-            background-color: #0080FF ;
+            background-color: #343a40; /* Same color as navbar-dark bg-dark */
             color: #fff;
-            padding: 20px 0; /* Reduce padding */
+            padding: 20px; /* Reduce padding */
         }
         .footer a {
             color: #fff;
@@ -88,5 +88,3 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
 </body>
 </html>
-
-

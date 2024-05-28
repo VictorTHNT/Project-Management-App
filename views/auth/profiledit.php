@@ -1,10 +1,17 @@
 <?php
-session_start();
 include '../../includes/connect.php';
+include '../../includes/navbar.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
+}
+
+// Vérifiez si 'user_role' est défini dans la session
+if (isset($_SESSION['user_role'])) {
+    $is_admin = $_SESSION['user_role'] === 'admin';
+} else {
+    $is_admin = false; // Par défaut, considérez que l'utilisateur n'est pas un administrateur
 }
 
 $user_id = $_SESSION['user_id'];
@@ -13,7 +20,6 @@ $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nom = htmlspecialchars($_POST['nom']);
     $prenom = htmlspecialchars($_POST['prenom']);
-    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
     $profile_image = $_FILES['profile_image'];
     $current_password = $_POST['current_password'];
     $new_password = $_POST['new_password'];
@@ -60,14 +66,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Mettre à jour les informations de l'utilisateur dans la base de données
     if (empty($message)) {
-        $stmt = $pdo->prepare("UPDATE Users SET nom = ?, prenom = ?, email = ?, profile = ? WHERE id = ?");
-        if ($stmt->execute([$nom, $prenom, $email, $profile_image_path, $user_id])) {
-            $message = 'Profil mis à jour avec succès';
-            $_SESSION['user_name'] = $nom . ' ' . $prenom;
-            $_SESSION['user_email'] = $email;
-            $_SESSION['user_profile'] = $profile_image_path;
+        if ($is_admin) {
+            $stmt = $pdo->prepare("UPDATE Users SET nom = ?, prenom = ?, email = ?, profile = ? WHERE id = ?");
+            if ($stmt->execute([$nom, $prenom, $user['email'], $profile_image_path, $user_id])) {
+                $message = 'Profil mis à jour avec succès';
+                $_SESSION['user_name'] = $nom . ' ' . $prenom;
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['user_profile'] = $profile_image_path;
+            } else {
+                $message = 'Erreur lors de la mise à jour du profil';
+            }
         } else {
-            $message = 'Erreur lors de la mise à jour du profil';
+            $stmt = $pdo->prepare("UPDATE Users SET nom = ?, prenom = ?, profile = ? WHERE id = ?");
+            if ($stmt->execute([$nom, $prenom, $profile_image_path, $user_id])) {
+                $message = 'Profil mis à jour avec succès';
+                $_SESSION['user_name'] = $nom . ' ' . $prenom;
+                $_SESSION['user_profile'] = $profile_image_path;
+            } else {
+                $message = 'Erreur lors de la mise à jour du profil';
+            }
         }
     }
 }
@@ -86,13 +103,9 @@ $user = $stmt->fetch();
     <title>Modifier Profil</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
         .container {
             max-width: 600px;
             margin-top: 50px;
-            background: #fff;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
@@ -137,10 +150,7 @@ $user = $stmt->fetch();
             <label for="prenom" class="form-label">Prénom</label>
             <input type="text" class="form-control" id="prenom" name="prenom" value="<?php echo htmlspecialchars($user['prenom']); ?>" required>
         </div>
-        <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
-        </div>
+        <!-- Champ email supprimé -->
         <div class="mb-3">
             <label for="profile_image" class="form-label">Photo de Profil</label>
             <input type="file" class="form-control" id="profile_image" name="profile_image">
@@ -162,6 +172,7 @@ $user = $stmt->fetch();
         <button type="submit" class="btn btn-primary w-100">Mettre à jour</button>
     </form>
 </div>
+<?php include '../../includes/footer.php' ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>
