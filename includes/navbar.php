@@ -28,6 +28,9 @@ $profile_image = !empty($user['profile']) ? $user['profile'] : 'assets/images/de
 if (!file_exists($_SERVER['DOCUMENT_ROOT'] . '/Project-Management-App/' . $profile_image)) {
     $profile_image = 'assets/images/default-profile.png';
 }
+
+// Définir la variable pour le rôle de l'utilisateur
+$user_role = $user['role'];
 ?>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -76,7 +79,10 @@ if (!file_exists($_SERVER['DOCUMENT_ROOT'] . '/Project-Management-App/' . $profi
                 <li class="nav-item d-flex align-items-center">
                     <img src="/Project-Management-App/<?php echo htmlspecialchars($profile_image); ?>" alt="Profile Image" width="30" height="30" class="rounded-circle me-2">
                     <span class="navbar-text">
-                    <a href="/Project-Management-App/views/auth/profile.php"><?php echo $user_name; ?></a>
+                        <a href="/Project-Management-App/views/auth/profile.php"><?php echo $user_name; ?></a>
+                        <?php if ($user_role === 'admin'): ?>
+                            <span class="badge bg-warning text-dark ms-2">Administrateur</span>
+                        <?php endif; ?>
                     </span>
                 </li>
                 <li class="nav-item">

@@ -25,7 +25,7 @@ if (!isset($_SESSION['nom']) || !isset($_SESSION['prenom'])) {
             padding: 0;
             background: url('./assets/images/fond.jpg') no-repeat center center fixed;
             background-size: cover;
-            color: #333;
+            color: #000;
         }
         .btn-custom {
             background-color: #696969;
@@ -44,7 +44,7 @@ if (!isset($_SESSION['nom']) || !isset($_SESSION['prenom'])) {
         }
         .hero {
             
-            color: #fff;
+            color: #000;
             text-align: center;
             padding: 100px 0;
         }
@@ -58,12 +58,14 @@ if (!isset($_SESSION['nom']) || !isset($_SESSION['prenom'])) {
         }
         .hero-buttons .btn {
             padding: 15px 30px;
-            border: 1px solid #fff;
-            color: #fff;
+            border: 1px solid #000;
+            color: #000;
             text-decoration: none;
             margin: 5px;
             border-radius: 3px;
         }
+
+
         .features, .pricing {
             padding: 60px 0;
         }
@@ -93,7 +95,7 @@ if (!isset($_SESSION['nom']) || !isset($_SESSION['prenom'])) {
         }
         .pricing-plan {
             text-align: center;
-            background-color: #fff;
+            background-color: #696969;
             padding: 40px;
             margin: 0 20px;
             border-radius: 5px;
@@ -122,8 +124,8 @@ if (!isset($_SESSION['nom']) || !isset($_SESSION['prenom'])) {
         }
         .pricing-plan .btn {
             padding: 10px 20px;
-            border: 1px solid #696969;
-            background-color: #696969;
+            border: 1px solid #000;
+            background-color: #000;
             color: #fff;
             text-decoration: none;
             border-radius: 3px;
@@ -141,7 +143,7 @@ if (!isset($_SESSION['nom']) || !isset($_SESSION['prenom'])) {
             padding: 60px 0;
         }
         .feature-section .feature-card {
-            border: 1px solid #696969;
+            border: 1px solid #000;
             border-radius: 10px;
             padding: 20px;
             text-align: center;
@@ -165,7 +167,7 @@ if (!isset($_SESSION['nom']) || !isset($_SESSION['prenom'])) {
             padding: 10px 20px;
             border: 1px solid #696969;
             background-color: #696969;
-            color: #fff;
+            color: #000;
             text-decoration: none;
             border-radius: 5px;
         }

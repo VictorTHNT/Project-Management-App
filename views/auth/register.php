@@ -15,8 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($user) {
         $register_error = "User already exists!";
     } else {
-        $stmt = $pdo->prepare('INSERT INTO users (nom, prenom, email, password, activation) VALUES (?, ?, ?, ?, 0)');
-        if ($stmt->execute([$nom, $prenom, $email, $password])) {
+        $stmt = $pdo->prepare('INSERT INTO users (nom, prenom, email, password, activation) VALUES (?, ?, ?, ?, ?)');
+        if ($stmt->execute([$nom, $prenom, $email, $password, 'non'])) {
             $register_success = "User registered successfully! Please wait for account activation.";
         } else {
             $register_error = "Error registering user!";
