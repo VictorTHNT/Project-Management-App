@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 include $_SERVER['DOCUMENT_ROOT'].'/Project-Management-App/includes/connect.php';
 
 // Vérifiez si l'utilisateur est connecté
