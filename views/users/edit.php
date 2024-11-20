@@ -165,8 +165,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="role" class="form-label">Rôle</label>
             <select class="form-select" id="role" name="role">
                 <option value="admin" <?php if ($edit_user['role'] === 'admin') echo 'selected'; ?>>Admin</option>
-                <option value="user" <?php if ($edit_user['role'] === 'manager') echo 'selected'; ?>>Manager</option>
-                <option value="user" <?php if ($edit_user['role'] === 'member') echo 'selected'; ?>>Membre</option>
+                <option value="manager" <?php if ($edit_user['role'] === 'manager') echo 'selected'; ?>>Manager</option>
+                <option value="member" <?php if ($edit_user['role'] === 'member') echo 'selected'; ?>>Membre</option>
             </select>
         </div>
         <div class="mb-3">
