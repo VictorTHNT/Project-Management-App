@@ -39,7 +39,7 @@ $user_role = $user['role'];
     <div class="container-fluid">
         <a class="navbar-brand" href="/Project-Management-App/index.php">
             <img src="/Project-Management-App/assets/images/logo_white.png" alt="Logo" width="30" height="30" class="d-inline-block align-top">
-            CAPTECH
+            VAAL
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
