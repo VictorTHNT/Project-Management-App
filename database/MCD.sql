@@ -1,24 +1,9 @@
--- Création de la base de données
-CREATE DATABASE IF NOT EXISTS project_management_app;
-
--- Utilisation de la base de données
-USE project_management_app;
-
--- Suppression des tables existantes si elles existent
-DROP TABLE IF EXISTS User_Team;
-DROP TABLE IF EXISTS Tasks;
-DROP TABLE IF EXISTS Projects;
-DROP TABLE IF EXISTS Users;
-DROP TABLE IF EXISTS Messages;
-DROP TABLE IF EXISTS Files;
-DROP TABLE IF EXISTS File_Comments;
-
 -- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : mer. 22 mai 2024 à 16:38
+-- Généré le : mer. 20 nov. 2024 à 16:24
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -50,6 +35,13 @@ CREATE TABLE `files` (
   `upload_timestamp` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Déchargement des données de la table `files`
+--
+
+INSERT INTO `files` (`id`, `project_id`, `uploader_id`, `file_path`, `upload_timestamp`) VALUES
+(1, 8, 4, '../../assets/upload/logo nice urgence.png', '2024-11-19 21:42:29');
+
 -- --------------------------------------------------------
 
 --
@@ -63,6 +55,13 @@ CREATE TABLE `file_comments` (
   `comment` text DEFAULT NULL,
   `comment_timestamp` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `file_comments`
+--
+
+INSERT INTO `file_comments` (`id`, `file_id`, `commenter_id`, `comment`, `comment_timestamp`) VALUES
+(1, 1, 4, 'ok', '2024-11-19 21:42:33');
 
 -- --------------------------------------------------------
 
@@ -88,7 +87,22 @@ CREATE TABLE `messages` (
 INSERT INTO `messages` (`id`, `sender_id`, `receiver_id`, `project_id`, `subject`, `body`, `timestamp`, `file_id`) VALUES
 (4, 4, NULL, 8, NULL, 'comment tu vas', '2024-05-22 13:45:14', NULL),
 (24, 1, NULL, 8, NULL, 'ca va ', '2024-05-22 14:15:14', NULL),
-(25, 1, NULL, 8, NULL, 'et toi', '2024-05-22 14:15:17', NULL);
+(25, 1, NULL, 8, NULL, 'et toi', '2024-05-22 14:15:17', NULL),
+(28, 1, NULL, 8, NULL, 'coucou suce ma bite', '2024-11-20 15:00:41', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `message` varchar(255) NOT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -136,7 +150,7 @@ CREATE TABLE `tasks` (
 --
 
 INSERT INTO `tasks` (`id`, `title`, `description`, `status`, `start_date`, `end_date`, `project_id`, `assignee_id`) VALUES
-(8, 'sdsqsdd', 'qs', 'pending', '0000-00-00', '3543-04-05', 8, 1),
+(8, 'sdsqsdd', 'qs', 'completed', '0000-00-00', '3543-04-05', 8, 1),
 (9, '1', '&&é\"', 'completed', '3333-03-31', '4444-04-04', 8, 1);
 
 -- --------------------------------------------------------
@@ -152,7 +166,7 @@ CREATE TABLE `users` (
   `prenom` varchar(255) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('member','manager') DEFAULT 'member',
+  `role` enum('member','manager','admin') DEFAULT 'member',
   `activation` enum('oui','non') NOT NULL DEFAULT 'non'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -161,8 +175,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `profile`, `nom`, `prenom`, `email`, `password`, `role`, `activation`) VALUES
-(1, '', 'thienot', 'victor', 'victor.thnt@gmail.com', '$2y$10$DCODFF.EuHHU58yOaCig5uKNIDSnMgxshP.lmYSCUvy4D1O3OQIHG', 'manager', 'oui'),
-(4, 'assets/images/victor.jpg', 'test', 'test', 'test@test.com', '$2y$10$pBDJPO.IWHFebRxXDuBksejxUeSEEUNntxzCkyZ4AU/UYE3k6YYHC', 'member', 'oui');
+(1, 'assets/images/vaal_logo_noir.png', 'thienot', 'victor', 'victor.thnt@gmail.com', '$2y$10$DCODFF.EuHHU58yOaCig5uKNIDSnMgxshP.lmYSCUvy4D1O3OQIHG', 'admin', 'oui'),
+(4, 'assets/images/victor.jpg', 'test', 'test', 'test@test.com', '$2y$10$pBDJPO.IWHFebRxXDuBksejxUeSEEUNntxzCkyZ4AU/UYE3k6YYHC', 'member', 'oui'),
+(5, '', 'Hamadi', 'aziz', 'aziz.hamadi@gmail.com', '$2y$10$QTGCmSOB0wHAMgHjbXc1XukqnuPRUteO5mC6w1s3N/AdGV3KYYNvW', 'member', 'oui'),
+(6, 'assets/images/default.png', 'DUHOO', 'Lucas', 'lucas.duhoo@gmail.com', '$2y$10$zNev3NCIaN91BF8Ey.IL0eg0itmnrGHaHVaQEi2K8WpyJ4O5WZVli', 'admin', 'oui');
 
 -- --------------------------------------------------------
 
@@ -218,6 +234,13 @@ ALTER TABLE `messages`
   ADD KEY `file_id` (`file_id`);
 
 --
+-- Index pour la table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
 -- Index pour la table `projects`
 --
 ALTER TABLE `projects`
@@ -255,19 +278,25 @@ ALTER TABLE `user_team`
 -- AUTO_INCREMENT pour la table `files`
 --
 ALTER TABLE `files`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `file_comments`
 --
 ALTER TABLE `file_comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `messages`
 --
 ALTER TABLE `messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+
+--
+-- AUTO_INCREMENT pour la table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `projects`
@@ -285,7 +314,7 @@ ALTER TABLE `tasks`
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT pour la table `user_team`
@@ -319,6 +348,12 @@ ALTER TABLE `messages`
   ADD CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `messages_ibfk_3` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
   ADD CONSTRAINT `messages_ibfk_4` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`);
+
+--
+-- Contraintes pour la table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Contraintes pour la table `projects`
