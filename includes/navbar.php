@@ -83,7 +83,7 @@ $user_role = $user['role'];
                     <span class="navbar-text">
                         <a href="/Project-Management-App/views/auth/profile.php"><?php echo $user_name; ?></a>
                         <?php if ($user_role === 'admin'): ?>
-                            <span class="badge bg-warning text-dark ms-2"><a href="../Project-Management-App/dashboard_admin.php" style="text-decoration: none;">Administrateur</a></span>
+                            <span class="badge bg-warning text-dark ms-2"><a href="/Project-Management-App/dashboard_admin.php" style="text-decoration: none;">Administrateur</a></span>
                         <?php endif; ?>
                     </span>
                 </li>
