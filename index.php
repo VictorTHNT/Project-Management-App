@@ -1,16 +1,3 @@
-<?php
- // Démarrer la session
- include 'includes/connect.php';
- include 'includes/navbar.php';
-// Vérifier si l'utilisateur est connecté
-if (!isset($_SESSION['nom']) || !isset($_SESSION['prenom'])) {
-    // Rediriger vers la page de connexion
-    header('Location: /Project-Management-App/views/auth/login.php');
-    exit();
-}
-
-?>
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -19,320 +6,590 @@ if (!isset($_SESSION['nom']) || !isset($_SESSION['prenom'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* Tous les styles précédents restent identiques */
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            background: url('./assets/images/fond.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: #000;
-        }
-        .btn-custom {
-            background-color: #696969;
-            border-color: #696969;
-            color: #fff;
+            background-color: #f8f9fa;
+            color: #333;
         }
 
-        .btn-custom:hover {
-            background-color: #696969
-            border-color: #696969
-        }
-
-        .container {
-            width: 80%;
-            margin: 0 auto;
-        }
-        .hero {
-            
-            color: #000;
-            text-align: center;
+        .hero-section {
+            background: linear-gradient(135deg, #0061f2 0%, #00ba88 100%);
             padding: 100px 0;
+            color: white;
+            text-align: center;
         }
-        .hero h1 {
-            font-size: 48px;
+
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-section p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .feature-cards {
+            margin-top: -50px;
+            padding-bottom: 50px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: #f0f9ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin-bottom: 20px;
         }
-        .hero p {
-            font-size: 24px;
-            margin-bottom: 40px;
+
+        .stats-section {
+            background: #fff;
+            padding: 80px 0;
         }
-        .hero-buttons .btn {
-            padding: 15px 30px;
-            border: 1px solid #000;
-            color: #000;
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #0061f2;
+            margin-bottom: 10px;
+        }
+
+        .workflow-section {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+
+        .workflow-step {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .workflow-number {
+            width: 40px;
+            height: 40px;
+            background: #0061f2;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-weight: bold;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #00ba88 0%, #0061f2 100%);
+            padding: 80px 0;
+            color: white;
+            text-align: center;
+        }
+
+        /* Nouveaux styles pour les boutons */
+        .btn-custom-primary {
+            background: linear-gradient(45deg, #0061f2, #00ba88);
+            color: white;
+            padding: 15px 35px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
             text-decoration: none;
-            margin: 5px;
-            border-radius: 3px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 97, 242, 0.3);
+            display: inline-block;
         }
 
-
-        .features, .pricing {
-            padding: 60px 0;
-        }
-        .features h2, .pricing h2 {
-            text-align: center;
-            font-size: 36px;
-            margin-bottom: 40px;
-        }
-        .feature {
-            text-align: center;
-            margin-bottom: 20px;
+        .btn-custom-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 97, 242, 0.4);
             color: white;
         }
-        .feature img {
-            width: 50px;
-            margin-bottom: 20px;
-        }
-        .feature h3 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        .feature p {
-            font-size: 16px;
-        }
-        .pricing {
-            background-color: #f4f5f7;
-        }
-        .pricing-plan {
-            text-align: center;
-            background-color: #696969;
-            padding: 40px;
-            margin: 0 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        .btn-custom-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px 35px;
+            border-radius: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
             display: inline-block;
-            vertical-align: top;
-            width: calc(33% - 40px);
         }
-        .pricing-plan h3 {
-            font-size: 24px;
-            margin-bottom: 20px;
+
+        .btn-custom-secondary:hover {
+            background: white;
+            color: #0061f2;
+            transform: translateY(-3px);
         }
-        .pricing-plan p {
-            font-size: 20px;
-            margin-bottom: 20px;
+
+        /* Styles pour la nouvelle section de tarifs */
+        .pricing-section {
+            padding: 100px 0;
+            background: #f8f9fa;
         }
-        .pricing-plan ul {
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .pricing-card.featured {
+            border: 2px solid #0061f2;
+        }
+
+        .pricing-card.featured::before {
+            content: 'Popular';
+            position: absolute;
+            top: 20px;
+            right: -35px;
+            background: #0061f2;
+            color: white;
+            padding: 5px 40px;
+            transform: rotate(45deg);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #0061f2;
+            margin: 20px 0;
+        }
+
+        .price span {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+
+        .feature-list {
             list-style: none;
             padding: 0;
-            margin: 0 0 20px 0;
+            margin: 30px 0;
         }
-        .pricing-plan ul li {
-            font-size: 16px;
-            color: #555;
-            margin-bottom: 10px;
+
+        .feature-list li {
+            padding: 10px 0;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
         }
-        .pricing-plan .btn {
-            padding: 10px 20px;
-            border: 1px solid #000;
-            background-color: #000;
-            color: #fff;
+
+        .feature-list li::before {
+            content: "✓";
+            color: #00ba88;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .btn-pricing {
+            width: 100%;
+            padding: 15px;
+            border-radius: 30px;
+            font-weight: 600;
             text-decoration: none;
-            border-radius: 3px;
-        }
-        .card-body {
-            background-color: #fff;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .feature-section {
-            background-color: #fff;
-            padding: 60px 0;
-        }
-        .feature-section .feature-card {
-            border: 1px solid #000;
-            border-radius: 10px;
-            padding: 20px;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
+            display: inline-block;
         }
-        .feature-section .feature-card img {
-            width: 80px;
-            margin-bottom: 20px;
+
+        .btn-pricing.primary {
+            background: linear-gradient(45deg, #0061f2, #00ba88);
+            color: white;
+            border: none;
         }
-        .feature-section .feature-card h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
+
+        .btn-pricing.secondary {
+            background: white;
+            color: #0061f2;
+            border: 2px solid #0061f2;
         }
-        .feature-section .feature-card p {
-            font-size: 16px;
-            color: #555;
-            margin-bottom: 20px;
-        }
-        .feature-section .feature-card .btn {
-            padding: 10px 20px;
-            border: 1px solid #696969;
-            background-color: #696969;
-            color: #000;
-            text-decoration: none;
-            border-radius: 5px;
+
+        .btn-pricing:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 97, 242, 0.2);
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row mt-4">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Projects</h5>
-                        <p class="card-text">Manage your projects and track progress.</p>
-                        <a href="./views/projects" class="btn btn-primary btn-custom">View Projects</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Tasks</h5>
-                        <p class="card-text">Keep track of your tasks and manage them efficiently.</p>
-                        <a href="./views/tasks" class="btn btn-primary btn-custom">View Tasks</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Team</h5>
-                        <p class="card-text">Collaborate with your team and share updates.</p>
-                        <a href="./views/" class="btn btn-primary btn-custom">View Team</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row mt-4">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Calendar</h5>
-                        <p class="card-text">Keep track of important deadlines and events.</p>
-                        <a href="./views/calendar" class="btn btn-primary btn-custom">View Calendar</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Reports</h5>
-                        <p class="card-text">Generate and view reports on project progress.</p>
-                        <a href="./views" class="btn btn-primary btn-custom">View Reports</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Settings</h5>
-                        <p class="card-text">Manage your account and application settings.</p>
-                        <a href="./views" class="btn btn-primary btn-custom">View Settings</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAAL - Navbar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <section class="hero">
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white; /* Fond blanc */
+            color: black; /* Texte noir */
+        }
+
+        .navbar .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar .logo-container img {
+            width: 150px; /* Taille du logo */
+            height: 40px;
+            margin-right: 10px; /* Espace entre le logo et le texte */
+        }
+
+        .navbar .logo-container .brand-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .navbar .btn-login {
+            padding: 10px 20px;
+            background-color: white;
+            color: black;
+            border: 2px solid blue; /* Bordure bleue pour plus de contraste */
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none; /* Supprime le soulignement pour le lien */
+            transition: 0.3s;
+        }
+
+        .navbar .btn-login:hover {
+            background-color: blue;
+            color: white; /* Texte blanc sur fond bleu au survol */
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo-container">
+            <img src="assets/images/vaal_logo_noir.png" alt="Logo"> 
+        </div>
+        <a href="views/auth/login.php" class="btn-login">Connexion</a>
+    </div>
+</body>
+</html>
+
+
+    
+    <section class="hero-section">
         <div class="container">
-            <h1>The best project management solution</h1>
-            <p>Organize, plan and collaborate on all your projects with our all-in-one platform.</p>
-            <div class="hero-buttons">
-                <a href="./views/projects" class="btn primary">Start now</a>
-                
-            </div>
+            <h1>Gérez vos projets avec efficacité</h1>
+            <p>Une solution complète pour planifier, suivre et collaborer sur vos projets d'entreprise</p>
+            <a href="./views/auth/register.php" class="btn-custom-primary mx-2">Commencer gratuitement</a>
+            <a href="#features" class="btn-custom-secondary mx-2">En savoir plus</a>
         </div>
     </section>
 
-    <section class="feature-section">
+    <section class="feature-cards">
         <div class="container">
-            <h2 class="text-center">Features to evolve efficiently</h2>
-            <h3 class="text-center">Do more with Project Management</h3>
-            <p class="text-center">ProjectManagement's intuitive features allow all teams to quickly configure and customize workflows for all their activities.</p>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <img src="./assets/images/taches.png" alt="Tasks" width="30">
+                        </div>
+                        <h3>Gestion des tâches</h3>
+                        <p>Organisez et suivez toutes vos tâches avec des tableaux Kanban intuitifs</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <img src="./assets/images/collaboration.png" alt="Team" width="30">
+                        </div>
+                        <h3>Collaboration d'équipe</h3>
+                        <p>Travaillez ensemble en temps réel avec des outils de communication intégrés</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <img src="./assets/images/calendrier.jpg" alt="Calendar" width="30">
+                        </div>
+                        <h3>Planification avancée</h3>
+                        <p>Visualisez et gérez les délais avec notre calendrier interactif</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="workflow-section">
+        <div class="container">
+            <h2 class="text-center mb-5">Comment ça marche</h2>
             <div class="row">
                 <div class="col-md-4">
-                    <div class="feature-card">
-                        <img src="./assets/images/integration.png" alt="Intégrations">
-                        <h3>Integrations</h3>
-                        <p>Connect the apps your team already uses to your workflow or add a Power-Up tailored to your specific needs.</p>
-                        <a href="#" class="btn">Browse integrations</a>
+                    <div class="workflow-step">
+                        <div class="workflow-number">1</div>
+                        <h3>Créez votre projet</h3>
+                        <p>Définissez vos objectifs et structurez votre projet en quelques clics</p>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="feature-card">
-                        <img src="./assets/images/intégration.jpeg" alt="Automatisation Butler">
-                        <h3>Butler Automation</h3>
-                        <p>Each board has code-free automation built into it. Focus on the most important tasks and let robots take care of the rest.</p>
-                        <a href="#" class="btn">Discover automation</a>
+                    <div class="workflow-step">
+                        <div class="workflow-number">2</div>
+                        <h3>Invitez votre équipe</h3>
+                        <p>Collaborez facilement avec tous les membres de votre équipe</p>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="feature-card">
-                        <img src="./assets/images/gestion.png" alt="GestionProjet Enterprise">
-                        <h3>GestionProjet Enterprise</h3>
-                        <p>The productivity tool favored by teams, complete with the features and security required to scale.</p>
-                        <a href="#" class="btn">Discover Enterprise</a>
+                    <div class="workflow-step">
+                        <div class="workflow-number">3</div>
+                        <h3>Suivez les progrès</h3>
+                        <p>Visualisez l'avancement et optimisez votre productivité</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta-section">
+        <div class="container">
+            <h2 class="mb-4">Prêt à optimiser votre gestion de projet ?</h2>
+            <p class="mb-4">Rejoignez des milliers d'entreprises qui font confiance à notre solution</p>
+            <a href="./views/auth/register.php" class="btn btn-light btn-lg">Commencer maintenant</a>
+        </div>
+    </section>
+    <section class="stats-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="stat-item">
+                        <div class="stat-number">10K+</div>
+                        <p>Projets gérés</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-item">
+                        <div class="stat-number">50K+</div>
+                        <p>Utilisateurs actifs</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-item">
+                        <div class="stat-number">98%</div>
+                        <p>Satisfaction client</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="features">
+
+    
+    <section class="pricing-section" id="pricing">
         <div class="container">
-            <div class="feature">
-                <h2>Features</h2>
-                <img src="./assets/images/taches.png" alt="Icone Fonctionnalité 1">
-                <h3>Task management</h3>
-                <p>Create, assign and track tasks efficiently.</p>
-            </div>
-            <div class="feature">
-                <img src="./assets/images/calendrier.jpg" alt="Icone Fonctionnalité 2">
-                <h3>Project schedule</h3>
-                <p>Visualize deadlines and plan your projects on an intuitive calendar.</p>
-            </div>
-            <div class="feature">
-                <img src="./assets/images/collaboration.png" alt="Icone Fonctionnalité 3">
-                <h3>Real-time collaboration</h3>
-                <p>Work together in real time with your team.</p>
+            <h2 class="text-center mb-5">Choisissez votre plan</h2>
+            <div class="row g-4">
+                
+                <div class="col-md-4">
+                    <div class="pricing-card">
+                        <h3>Gratuit</h3>
+                        <div class="price">0€ <span>/mois</span></div>
+                        <p>Parfait pour débuter</p>
+                        <ul class="feature-list">
+                            <li>Jusqu'à 5 projets</li>
+                            <li>2 membres d'équipe</li>
+                            <li>Tableau Kanban basique</li>
+                            <li>Support par email</li>
+                            <li>Stockage 1GB</li>
+                        </ul>
+                        <a href="./views/auth/register.php" class="btn-pricing secondary">Commencer gratuitement</a>
+                    </div>
+                </div>
+
+            
+                <div class="col-md-4">
+                    <div class="pricing-card featured">
+                        <h3>Pro</h3>
+                        <div class="price">29€ <span>/mois</span></div>
+                        <p>Pour les équipes en croissance</p>
+                        <ul class="feature-list">
+                            <li>Projets illimités</li>
+                            <li>Jusqu'à 15 membres</li>
+                            <li>Tableaux avancés</li>
+                            <li>Support prioritaire</li>
+                            <li>Stockage 10GB</li>
+                            <li>Rapports personnalisés</li>
+                            <li>Intégrations avancées</li>
+                        </ul>
+                        <a href="./views/auth/register.php" class="btn-pricing primary">Commencer l'essai Pro</a>
+                    </div>
+                </div>
+
+                
+                <div class="col-md-4">
+                    <div class="pricing-card">
+                        <h3>Enterprise</h3>
+                        <div class="price">99€ <span>/mois</span></div>
+                        <p>Pour les grandes entreprises</p>
+                        <ul class="feature-list">
+                            <li>Tout illimité</li>
+                            <li>Membres illimités</li>
+                            <li>Support 24/7 dédié</li>
+                            <li>Stockage illimité</li>
+                            <li>Sécurité avancée</li>
+                            <li>API personnalisée</li>
+                            <li>Formation sur mesure</li>
+                            <li>SLA garanti</li>
+                        </ul>
+                        <a href="./views/auth/register.php" class="btn-pricing secondary">Contacter les ventes</a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="pricing">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer Example</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .content {
+            flex: 1;
+        }
+
+        .footer {
+            background-color: #343a40;
+            color: #fff;
+            padding: 20px 10px;
+        }
+
+        .footer a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .footer a:hover {
+            color: black;
+        }
+
+        .social-icons a {
+            margin: 0 10px;
+            font-size: 24px;
+        }
+
+        .app-badges img {
+            height: 40px;
+            margin-left: 10px;
+        }
+
+        .footer .container {
+            display: flex;
+            justify-content: space-between; /* Répartir les blocs horizontalement */
+            align-items: center; /* Centrer verticalement */
+            flex-wrap: wrap; /* Empêcher les débordements */
+        }
+
+        .footer .container > div {
+            flex: 1;
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .footer .container > div:first-child {
+                text-align: left;
+            }
+
+            .footer .container > div:last-child {
+                text-align: right;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="content">
+        
+    </div>
+
+    <footer class="footer mt-auto">
         <div class="container">
-            <h2>Prices</h2>
-            <div class="d-flex justify-content-center flex-wrap">
-                <div class="pricing-plan">
-                    <h3>Basic</h3>
-                    <p>Free</p>
-                    <p>For small teams</p>
-                    <ul>
-                        <li>Up to 10 projects</li>
-                        <li>5 users</li>
-                        <li>Basic features</li>
-                    </ul>
-                    <a href="./views/auth/register.php" class="btn primary">Register</a>
-                </div>
-                <div class="pricing-plan">
-                    <h3>Professional</h3>
-                    <p>29€/mois</p>
-                    <p>For growing teams</p>
-                    <ul>
-                        <li>Unlimited projects</li>
-                        <li>Unlimited users</li>
-                        <li>Advanced Features</li>
-                    </ul>
-                    <a href="./views/auth/register.php" class="btn primary">Register</a>
-                </div>
+            <!-- Left Section -->
+            <div>
+                <p class="mb-0">&copy; 2024 Vaal, Inc.</p>
+            </div>
+
+            <!-- Middle Section -->
+            <div>
+                <a href="#">Englais</a>
+                <a href="#">Conditions & Confidentialité</a>
+            </div>
+
+            <!-- Social Icons -->
+            <div class="social-icons">
+                <a href="https://twitter.com" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="https://linkedin.com" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="https://instagram.com" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://facebook.com" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://youtube.com" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            </div>
+
+            <!-- App Store Badge -->
+            <div class="app-badges">
+                <a href="https://www.apple.com/app-store/">
+                    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store">
+                </a>
             </div>
         </div>
-    </section>
+    </footer>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
 </body>
 </html>
