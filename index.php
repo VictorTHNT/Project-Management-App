@@ -65,7 +65,7 @@
 
         .stats-section {
             background: #fff;
-            padding: 80px 0;
+            padding: 40px 0;
         }
 
         .stat-item {
@@ -151,7 +151,7 @@
 
         /* Styles pour la nouvelle section de tarifs */
         .pricing-section {
-            padding: 100px 0;
+            padding: 80px 0;
             background: #f8f9fa;
         }
 
@@ -192,7 +192,7 @@
             font-size: 3rem;
             font-weight: 700;
             color: #0061f2;
-            margin: 20px 0;
+            margin: 5px 0;
         }
 
         .price span {
@@ -289,11 +289,11 @@
             font-weight: bold;
         }
 
-        .navbar .btn-login {
+        .navbar .btn-register {
             padding: 10px 20px;
             background-color: white;
             color: black;
-            border: 2px solid blue; /* Bordure bleue pour plus de contraste */
+            border: 2px solid #0061f2; /* Bordure bleue pour plus de contraste */
             border-radius: 5px;
             font-size: 16px;
             cursor: pointer;
@@ -301,9 +301,17 @@
             transition: 0.3s;
         }
 
-        .navbar .btn-login:hover {
-            background-color: blue;
+        .navbar .btn-register:hover {
+            background-color: #0061f2;
             color: white; /* Texte blanc sur fond bleu au survol */
+        }
+
+        #bouton1{
+            margin-top: 130px;
+        }
+
+        #bouton2{
+            margin-top: 40px;
         }
     </style>
 </head>
@@ -312,7 +320,7 @@
         <div class="logo-container">
             <img src="assets/images/vaal_logo_noir.png" alt="Logo"> 
         </div>
-        <a href="views/auth/login.php" class="btn-login">Connexion</a>
+        <a href="views/auth/register.php" class="btn-register">Inscription</a>
     </div>
 </body>
 </html>
@@ -324,7 +332,7 @@
             <h1>Gérez vos projets avec efficacité</h1>
             <p>Une solution complète pour planifier, suivre et collaborer sur vos projets d'entreprise</p>
             <a href="./views/auth/register.php" class="btn-custom-primary mx-2">Commencer gratuitement</a>
-            <a href="#features" class="btn-custom-secondary mx-2">En savoir plus</a>
+            <a href="" class="btn-custom-secondary mx-2">En savoir plus</a>
         </div>
     </section>
 
@@ -394,7 +402,7 @@
         <div class="container">
             <h2 class="mb-4">Prêt à optimiser votre gestion de projet ?</h2>
             <p class="mb-4">Rejoignez des milliers d'entreprises qui font confiance à notre solution</p>
-            <a href="./views/auth/register.php" class="btn btn-light btn-lg">Commencer maintenant</a>
+            <a href="" class="btn btn-light btn-lg">Commencer maintenant</a>
         </div>
     </section>
     <section class="stats-section">
@@ -439,9 +447,8 @@
                             <li>2 membres d'équipe</li>
                             <li>Tableau Kanban basique</li>
                             <li>Support par email</li>
-                            <li>Stockage 1GB</li>
                         </ul>
-                        <a href="./views/auth/register.php" class="btn-pricing secondary">Commencer gratuitement</a>
+                        <a href="" class="btn-pricing secondary" id="bouton1">Commencer gratuitement</a>
                     </div>
                 </div>
 
@@ -456,11 +463,10 @@
                             <li>Jusqu'à 15 membres</li>
                             <li>Tableaux avancés</li>
                             <li>Support prioritaire</li>
-                            <li>Stockage 10GB</li>
                             <li>Rapports personnalisés</li>
                             <li>Intégrations avancées</li>
                         </ul>
-                        <a href="./views/auth/register.php" class="btn-pricing primary">Commencer l'essai Pro</a>
+                        <a href="" class="btn-pricing primary" id="bouton2">Commencer l'essai Pro</a>
                     </div>
                 </div>
 
@@ -474,13 +480,12 @@
                             <li>Tout illimité</li>
                             <li>Membres illimités</li>
                             <li>Support 24/7 dédié</li>
-                            <li>Stockage illimité</li>
                             <li>Sécurité avancée</li>
                             <li>API personnalisée</li>
                             <li>Formation sur mesure</li>
                             <li>SLA garanti</li>
                         </ul>
-                        <a href="./views/auth/register.php" class="btn-pricing secondary">Contacter les ventes</a>
+                        <a href="" class="btn-pricing secondary">Contacter les ventes</a>
                     </div>
                 </div>
             </div>

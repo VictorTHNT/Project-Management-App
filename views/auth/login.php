@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['nom'] = $user['nom'];
             $_SESSION['prenom'] = $user['prenom'];
             $_SESSION['role'] = $user['role']; // Ajout du rôle dans la session
-            header('Location: ../../index.php');
+            header('Location: ../../dashboard.php');
             exit;
         } else {
             $login_error = "Your account is not activated. Please contact the administrator.";
