@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : mer. 20 nov. 2024 à 16:24
+-- Généré le : mer. 04 déc. 2024 à 12:31
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -35,13 +35,6 @@ CREATE TABLE `files` (
   `upload_timestamp` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Déchargement des données de la table `files`
---
-
-INSERT INTO `files` (`id`, `project_id`, `uploader_id`, `file_path`, `upload_timestamp`) VALUES
-(1, 8, 4, '../../assets/upload/logo nice urgence.png', '2024-11-19 21:42:29');
-
 -- --------------------------------------------------------
 
 --
@@ -55,13 +48,6 @@ CREATE TABLE `file_comments` (
   `comment` text DEFAULT NULL,
   `comment_timestamp` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `file_comments`
---
-
-INSERT INTO `file_comments` (`id`, `file_id`, `commenter_id`, `comment`, `comment_timestamp`) VALUES
-(1, 1, 4, 'ok', '2024-11-19 21:42:33');
 
 -- --------------------------------------------------------
 
@@ -79,16 +65,6 @@ CREATE TABLE `messages` (
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
   `file_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `messages`
---
-
-INSERT INTO `messages` (`id`, `sender_id`, `receiver_id`, `project_id`, `subject`, `body`, `timestamp`, `file_id`) VALUES
-(4, 4, NULL, 8, NULL, 'comment tu vas', '2024-05-22 13:45:14', NULL),
-(24, 1, NULL, 8, NULL, 'ca va ', '2024-05-22 14:15:14', NULL),
-(25, 1, NULL, 8, NULL, 'et toi', '2024-05-22 14:15:17', NULL),
-(28, 1, NULL, 8, NULL, 'coucou suce ma bite', '2024-11-20 15:00:41', NULL);
 
 -- --------------------------------------------------------
 
@@ -117,16 +93,20 @@ CREATE TABLE `projects` (
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   `budget` decimal(10,2) DEFAULT NULL,
-  `manager_id` int(11) DEFAULT NULL
+  `manager_id` int(11) DEFAULT NULL,
+  `color` varchar(7) NOT NULL DEFAULT '#FFFFFF',
+  `cahier_charge` varchar(255) DEFAULT NULL,
+  `user_team_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `projects`
 --
 
-INSERT INTO `projects` (`id`, `title`, `description`, `start_date`, `end_date`, `budget`, `manager_id`) VALUES
-(8, '1 ', 'id 8', '5555-05-05', '2222-02-01', 0.00, 1),
-(10, '2', 'id 10', '2024-03-04', '2024-04-08', 0.00, 1);
+INSERT INTO `projects` (`id`, `title`, `description`, `start_date`, `end_date`, `budget`, `manager_id`, `color`, `cahier_charge`, `user_team_id`) VALUES
+(22, 'DZ', 'DZ', '0001-01-01', '0001-01-01', 0.00, 1, '#480f0f', NULL, NULL),
+(27, 'dsq', 'dqs', '0006-05-04', '0034-02-03', 435.00, 5, '#000000', NULL, NULL),
+(35, 'azer', 'azeretry', '7777-09-09', '6777-06-07', 4678.00, 5, '#000000', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -144,14 +124,6 @@ CREATE TABLE `tasks` (
   `project_id` int(11) DEFAULT NULL,
   `assignee_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `tasks`
---
-
-INSERT INTO `tasks` (`id`, `title`, `description`, `status`, `start_date`, `end_date`, `project_id`, `assignee_id`) VALUES
-(8, 'sdsqsdd', 'qs', 'completed', '0000-00-00', '3543-04-05', 8, 1),
-(9, '1', '&&é\"', 'completed', '3333-03-31', '4444-04-04', 8, 1);
 
 -- --------------------------------------------------------
 
@@ -175,10 +147,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `profile`, `nom`, `prenom`, `email`, `password`, `role`, `activation`) VALUES
-(1, 'assets/images/vaal_logo_noir.png', 'thienot', 'victor', 'victor.thnt@gmail.com', '$2y$10$DCODFF.EuHHU58yOaCig5uKNIDSnMgxshP.lmYSCUvy4D1O3OQIHG', 'admin', 'oui'),
+(1, 'assets/images/WhatsApp Image 2023-12-29 à 18.38.07_550c0d25.jpg', 'thienot', 'victor', 'victor.thnt@gmail.com', '$2y$10$DCODFF.EuHHU58yOaCig5uKNIDSnMgxshP.lmYSCUvy4D1O3OQIHG', 'admin', 'oui'),
 (4, 'assets/images/victor.jpg', 'test', 'test', 'test@test.com', '$2y$10$pBDJPO.IWHFebRxXDuBksejxUeSEEUNntxzCkyZ4AU/UYE3k6YYHC', 'member', 'oui'),
 (5, '', 'Hamadi', 'aziz', 'aziz.hamadi@gmail.com', '$2y$10$QTGCmSOB0wHAMgHjbXc1XukqnuPRUteO5mC6w1s3N/AdGV3KYYNvW', 'member', 'oui'),
-(6, 'assets/images/default.png', 'DUHOO', 'Lucas', 'lucas.duhoo@gmail.com', '$2y$10$zNev3NCIaN91BF8Ey.IL0eg0itmnrGHaHVaQEi2K8WpyJ4O5WZVli', 'admin', 'oui');
+(6, 'assets/images/default.png', 'DUHOO', 'Lucas', 'lucas.duhoo@gmail.com', '$2y$10$zNev3NCIaN91BF8Ey.IL0eg0itmnrGHaHVaQEi2K8WpyJ4O5WZVli', 'member', 'oui');
 
 -- --------------------------------------------------------
 
@@ -193,15 +165,6 @@ CREATE TABLE `user_team` (
   `user_id` int(11) DEFAULT NULL,
   `post` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `user_team`
---
-
-INSERT INTO `user_team` (`team_id`, `team_name`, `project_id`, `user_id`, `post`) VALUES
-(6, '', 8, 1, NULL),
-(10, '', 10, 1, NULL),
-(11, '', 8, 4, NULL);
 
 --
 -- Index pour les tables déchargées
@@ -244,8 +207,7 @@ ALTER TABLE `notifications`
 -- Index pour la table `projects`
 --
 ALTER TABLE `projects`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `manager_id` (`manager_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Index pour la table `tasks`
@@ -266,9 +228,7 @@ ALTER TABLE `users`
 -- Index pour la table `user_team`
 --
 ALTER TABLE `user_team`
-  ADD PRIMARY KEY (`team_id`),
-  ADD KEY `project_id` (`project_id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD PRIMARY KEY (`team_id`);
 
 --
 -- AUTO_INCREMENT pour les tables déchargées
@@ -278,19 +238,19 @@ ALTER TABLE `user_team`
 -- AUTO_INCREMENT pour la table `files`
 --
 ALTER TABLE `files`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT pour la table `file_comments`
 --
 ALTER TABLE `file_comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT pour la table `messages`
 --
 ALTER TABLE `messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT pour la table `notifications`
@@ -302,7 +262,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT pour la table `projects`
 --
 ALTER TABLE `projects`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT pour la table `tasks`
@@ -320,7 +280,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT pour la table `user_team`
 --
 ALTER TABLE `user_team`
-  MODIFY `team_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `team_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- Contraintes pour les tables déchargées
@@ -371,10 +331,10 @@ ALTER TABLE `tasks`
 --
 -- Contraintes pour la table `user_team`
 --
-ALTER TABLE `user_team`
-  ADD CONSTRAINT `user_team_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
-  ADD CONSTRAINT `user_team_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-COMMIT;
+-- ALTER TABLE `user_team`
+--   ADD CONSTRAINT `user_team_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
+--   ADD CONSTRAINT `user_team_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+-- COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

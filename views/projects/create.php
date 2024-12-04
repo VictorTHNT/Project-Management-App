@@ -10,13 +10,20 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $title = $_POST['title'];
-    $description = $_POST['description'];
+    // Validation des entrées
+    $title = trim($_POST['title']);
+    $description = trim($_POST['description']);
     $start_date = $_POST['start_date'];
     $end_date = $_POST['end_date'];
-    $budget = $_POST['budget'];
+    $budget = floatval($_POST['budget']);
     $color = $_POST['color'];
 
+    // Validation des données de base
+    if (empty($title) || empty($start_date) || empty($end_date)) {
+        die("Erreur : Tous les champs obligatoires ne sont pas remplis.");
+    }
+
+    // Gestion du fichier cahier des charges
     $cahier_charge_path = null;
     if (isset($_FILES['cahier_charge']) && $_FILES['cahier_charge']['error'] === UPLOAD_ERR_OK) {
         $upload_dir = '../../uploads/project_files/';
@@ -26,70 +33,117 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $file_tmp = $_FILES['cahier_charge']['tmp_name'];
         $file_name = basename($_FILES['cahier_charge']['name']);
-        $file_path = $upload_dir . $file_name;
+        $file_path = $upload_dir . uniqid() . '_' . $file_name;  // Nom unique
 
         if (move_uploaded_file($file_tmp, $file_path)) {
-            $cahier_charge_path = 'uploads/project_files/' . $file_name;
+            $cahier_charge_path = str_replace('../../', '', $file_path);
         } else {
-            echo "Erreur lors du téléchargement du fichier.";
-            exit;
+            die("Erreur lors du téléchargement du fichier.");
         }
     }
 
-    $team_option = $_POST['team_option'];
-    $team_name = $_POST['team_name'];
-    $members = $_POST['members'];
+    $team_option = $_POST['team_option'] ?? 'new';
+    $team_name = $_POST['team_name'] ?? uniqid('team_');  // Générer un nom d'équipe unique si vide
+    $members = $_POST['members'] ?? [];
 
     $pdo->beginTransaction();
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO projects (title, description, start_date, end_date, budget, color, cahier_charge, manager_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$title, $description, $start_date, $end_date, $budget, $color, $cahier_charge_path, $user_id]);
+        // Insertion du projet
+        $projectStmt = $pdo->prepare("INSERT INTO projects 
+            (title, description, start_date, end_date, budget, color, cahier_charge, manager_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        
+        $projectStmt->execute([
+            $title, 
+            $description, 
+            $start_date, 
+            $end_date, 
+            $budget, 
+            $color, 
+            $cahier_charge_path, 
+            $user_id
+        ]);
+
         $project_id = $pdo->lastInsertId();
 
-        if ($team_option == 'new') {
-            foreach ($members as $member) {
-                $email = $member['email'];
-                $role = $member['role'];
+        // Notifications pour les membres de l'équipe & création du projet
+        $teamMembersStmt = $pdo->prepare("SELECT DISTINCT user_id FROM user_team WHERE project_id = ?");
+        $teamMembersStmt->execute([$project_id]);
+        $teamMembers = $teamMembersStmt->fetchAll(PDO::FETCH_COLUMN);
 
+        foreach ($teamMembers as $teamMemberId) {
+            $notifStmt = $pdo->prepare("INSERT INTO notifications 
+                (user_id, project_id, message) 
+                VALUES (?, ?, ?)");
+            
+            $notifStmt->execute([
+                $teamMemberId, 
+                $project_id, 
+                "Nouveau projet créé : $title"
+            ]);
+        }
+        
+        // Gestion de l'équipe
+        if ($team_option == 'new') {
+            // Ajouter les membres à la nouvelle équipe
+            foreach ($members as $index => $member) {
+                $email = trim($member['email']);
+                $role = trim($member['role'] ?? '');
+
+                if (empty($email)) continue;  // Ignorer les entrées vides
+
+                // Trouver l'utilisateur par email
                 $userStmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
                 $userStmt->execute([$email]);
-                $user = $userStmt->fetch();
+                $user = $userStmt->fetch(PDO::FETCH_ASSOC);
 
                 if ($user) {
-                    $user_id = $user['id'];
-                    $teamStmt = $pdo->prepare("INSERT INTO user_team (team_name, user_id, project_id, post) VALUES (?, ?, ?, ?)");
-                    $teamStmt->execute([$team_name, $user_id, $project_id, $role]);
+                    // Insérer dans user_team avec l'ID du projet
+                    $teamStmt = $pdo->prepare("INSERT INTO user_team 
+                        (team_name, user_id, project_id, post) 
+                        VALUES (?, ?, ?, ?)");
+                   echo  "INSERT INTO user_team values('$team_name','".$user['id']."','$project_id','$role')";
+                    $teamStmt->execute([
+                        $team_name, 
+                        $user['id'], 
+                        $project_id, 
+                        $role
+                    ]);
                 }
             }
         } elseif ($team_option == 'existing') {
             $existing_team_name = $_POST['existing_team_name'];
-            $existingTeamStmt = $pdo->prepare("SELECT user_id, post FROM user_team WHERE team_name = ?");
+            
+            // Récupérer les membres de l'équipe existante
+            $existingTeamStmt = $pdo->prepare("SELECT DISTINCT user_id, post FROM user_team WHERE team_name = ?");
             $existingTeamStmt->execute([$existing_team_name]);
-            $existingTeamMembers = $existingTeamStmt->fetchAll();
+            $existingTeamMembers = $existingTeamStmt->fetchAll(PDO::FETCH_ASSOC);
 
-            foreach ($existingTeamMembers as $existingMember) {
-                $teamStmt = $pdo->prepare("INSERT INTO user_team (team_name, user_id, project_id, post) VALUES (?, ?, ?, ?)");
-                $teamStmt->execute([$existing_team_name, $existingMember['user_id'], $project_id, $existingMember['post']]);
+            foreach ($existingTeamMembers as $member) {
+                // Insérer les membres de l'équipe existante avec le nouveau projet
+                $teamStmt = $pdo->prepare("INSERT INTO user_team 
+                    (team_name, user_id, project_id, post) 
+                    VALUES (?, ?, ?, ?)");
+                
+                $teamStmt->execute([
+                    $existing_team_name, 
+                    $member['user_id'], 
+                    $project_id, 
+                    $member['post']
+                ]);
             }
         }
 
-        $teamStmt = $pdo->prepare("SELECT user_id FROM user_team WHERE project_id = ?");
-        $teamStmt->execute([$project_id]);
-        $teamMembers = $teamStmt->fetchAll();
-
-        foreach ($teamMembers as $member) {
-            $notificationStmt = $pdo->prepare("INSERT INTO notifications (user_id, project_id, message) VALUES (?, ?, ?)");
-            $notificationStmt->execute([$member['user_id'], $project_id, 'New project created: ' . $title]);
-        }
+        
 
         $pdo->commit();
         header("Location: ../index.php?selected_project=$project_id");
         exit;
 
-    } catch (Exception $e) {
+    } catch (PDOException $e) {
         $pdo->rollBack();
-        echo "Erreur : " . $e->getMessage();
+        die("Erreur SQL : " . $e->getMessage());
     }
 }
 ?>
