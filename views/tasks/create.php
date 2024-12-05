@@ -31,11 +31,11 @@ try {
         $selected_project_id = $project_id ?: $_POST['project_id'];
 
         $pdo->beginTransaction();
-
+        
         try {
             $stmt = $pdo->prepare("INSERT INTO Tasks (title, description, status, start_date, end_date, project_id, assignee_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([$title, $description, $status, $start_date, $end_date, $selected_project_id, $assignee_id]);
-
+            var_dump($project_id);
             // Récupérer l'ID de la tâche créée
             $task_id = $pdo->lastInsertId();
 
@@ -43,14 +43,10 @@ try {
             $teamStmt = $pdo->prepare("SELECT user_id FROM User_Team WHERE project_id = ?");
             $teamStmt->execute([$selected_project_id]);
             $teamMembers = $teamStmt->fetchAll();
-
-            foreach ($teamMembers as $member) {
-                $notificationStmt = $pdo->prepare("INSERT INTO notifications (user_id, project_id, message) VALUES (?, ?, ?)");
-                $notificationStmt->execute([$member['user_id'], $selected_project_id, 'New task created: ' . $title]);
-            }
-
+            var_dump($project_id);
+            
             $pdo->commit();
-
+            
             header("Location: view.php?project_id=" . $selected_project_id);
             exit;
 
