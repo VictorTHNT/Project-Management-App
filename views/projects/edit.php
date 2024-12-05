@@ -12,10 +12,18 @@ $user_id = $_SESSION['user_id'];
 $user_role = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
     if (isset($_POST['delete_project'])) {
         $project_id = $_POST['project_id'];
 
+        // // Supprimer le projet
+        // $stmt = $pdo->prepare("DELETE FROM projects WHERE id = ?");
+        // $stmt->execute([$project_id]);
+
+
         try {
+            
+
             $pdo->beginTransaction();
 
             // Supprimer les commentaires sur les fichiers associés au projet
@@ -54,6 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 unlink('../../assets/upload/' . $cahier_charge);
             }
 
+            //////////////////////////////////////////////////////////////////////////////////////////
             // Supprimer le projet
             $stmt = $pdo->prepare("DELETE FROM projects WHERE id = ?");
             $stmt->execute([$project_id]);
