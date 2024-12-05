@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // $stmt = $pdo->prepare("DELETE FROM projects WHERE id = ?");
         // $stmt->execute([$project_id]);
 
-
+        var_dump($project_id);
         try {
             
 
@@ -33,15 +33,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Supprimer les fichiers associés au projet
             $stmt = $pdo->prepare("DELETE FROM files WHERE project_id = ?");
             $stmt->execute([$project_id]);
-
-            // Supprimer les notifications associées au projet
-            $stmt = $pdo->prepare("DELETE FROM notifications WHERE project_id = ?");
-            $stmt->execute([$project_id]);
-
+            var_dump($project_id);
+            
             // Supprimer les messages associés au projet
             $stmt = $pdo->prepare("DELETE FROM messages WHERE project_id = ?");
             $stmt->execute([$project_id]);
-
+            
             // Supprimer les tâches associées au projet
             $stmt = $pdo->prepare("DELETE FROM tasks WHERE project_id = ?");
             $stmt->execute([$project_id]);
@@ -50,9 +47,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt = $pdo->prepare("DELETE FROM user_team WHERE project_id = ?");
             $stmt->execute([$project_id]);
 
-            // Supprimer les événements de calendrier associés au projet
-            $stmt = $pdo->prepare("DELETE FROM calendar_events WHERE project_id = ?");
-            $stmt->execute([$project_id]);
 
             // Supprimer les cahiers de charge associés au projet
             $stmt = $pdo->prepare("SELECT cahier_charge FROM projects WHERE id = ?");
@@ -61,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($cahier_charge) {
                 unlink('../../assets/upload/' . $cahier_charge);
             }
-
+            
             //////////////////////////////////////////////////////////////////////////////////////////
             // Supprimer le projet
             $stmt = $pdo->prepare("DELETE FROM projects WHERE id = ?");
