@@ -33,9 +33,8 @@ try {
         $pdo->beginTransaction();
         
         try {
-            $stmt = $pdo->prepare("INSERT INTO Tasks (title, description, status, start_date, end_date, project_id, assignee_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$title, $description, $status, $start_date, $end_date, $selected_project_id, $assignee_id]);
-            var_dump($project_id);
+            $stmt = $pdo->prepare("INSERT INTO Tasks (title, description, status, start_date, end_date, priority, project_id, assignee_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$title, $description, $status, $start_date, $end_date, $_POST['priority'], $selected_project_id, $assignee_id]);
             // Récupérer l'ID de la tâche créée
             $task_id = $pdo->lastInsertId();
 
@@ -43,7 +42,7 @@ try {
             $teamStmt = $pdo->prepare("SELECT user_id FROM User_Team WHERE project_id = ?");
             $teamStmt->execute([$selected_project_id]);
             $teamMembers = $teamStmt->fetchAll();
-            var_dump($project_id);
+
             
             $pdo->commit();
             
@@ -141,6 +140,15 @@ try {
                 ?>
             </select>
         </div>
+        <div class="mb-3">
+            <label for="priority" class="form-label">Priorité</label>
+            <select class="form-select" id="priority" name="priority" required>
+                <option value="faible">Faible</option>
+                <option value="modéré">Modéré</option>
+                <option value="élevé">Élevé</option>
+            </select>
+        </div>
+
         <div class="text-center">
             <button type="submit" class="btn btn-success">Créer</button>
         </div>
