@@ -17,29 +17,34 @@ try {
         $task_id = $_POST['task_id'];
 
         // Mise à jour du statut de la tâche
-        $updateStmt = $pdo->prepare("UPDATE Tasks SET status = ? WHERE id = ?");
+        $updateStmt = $pdo->prepare("UPDATE tasks SET status = ? WHERE id = ?");
         $updateStmt->execute([$status, $task_id]);
     }
 
     if ($user_role === 'admin') {
         // Récupérer tous les projets pour les administrateurs
-        $projectsStmt = $pdo->query("SELECT id, title, description, end_date FROM Projects");
+        $projectsStmt = $pdo->query("SELECT id, title, description, end_date FROM projects");
     } else {
         // Récupérer les projets associés à l'utilisateur connecté
         $projectsStmt = $pdo->prepare("
-            SELECT Projects.id, Projects.title, Projects.description, Projects.end_date 
-            FROM Projects 
-            JOIN User_Team ON Projects.id = User_Team.project_id 
-            WHERE User_Team.user_id = ?
+            SELECT projects.id, projects.title, projects.description, projects.end_date 
+            FROM projects 
+            JOIN user_team ON projects.id = user_team.project_id 
+            WHERE user_team.user_id = ?
         ");
         $projectsStmt->execute([$user_id]);
     }
     $projects = $projectsStmt->fetchAll();
     
-    // Récupérer les tâches associées aux projets récupérés
+    // Récupérer les tâches associées aux projets avec l'information des utilisateurs assignés
     $tasks = [];
     foreach ($projects as $project) {
-        $tasksStmt = $pdo->prepare("SELECT * FROM Tasks WHERE project_id = ?");
+        $tasksStmt = $pdo->prepare("
+            SELECT tasks.*, CONCAT(users.nom, ' ', users.prenom) AS assignee_name 
+            FROM tasks 
+            LEFT JOIN users ON tasks.assignee_id = users.id 
+            WHERE tasks.project_id = ?
+        ");
         $tasksStmt->execute([$project['id']]);
         $projectTasks = $tasksStmt->fetchAll();
         $tasks = array_merge($tasks, $projectTasks);
@@ -66,8 +71,10 @@ try {
             <tr>
                 <th>Titre</th>
                 <th>Description</th>
+                <th>Assigné à</th>
                 <th>Statut</th>
                 <th>Actions</th>
+                <th>Voir Détails</th>
             </tr>
         </thead>
         <tbody>
@@ -76,6 +83,9 @@ try {
                     <tr>
                         <td><?php echo htmlspecialchars($task['title']); ?></td>
                         <td><?php echo htmlspecialchars($task['description']); ?></td>
+                        <td>
+                            <?php echo !empty($task['assignee_name']) ? htmlspecialchars($task['assignee_name']) : 'Non assigné'; ?>
+                        </td>
                         <td>
                             <?php if ($task['status'] == 'pending'): ?>
                                 <span class="badge bg-danger">Pending</span>
@@ -86,35 +96,27 @@ try {
                             <?php endif; ?>
                         </td>
                         <td>
-                            <!-- Boutons d'action -->
-                            <div class="d-flex align-items-center">
-                                <form method="post" class="d-inline me-2">
-                                    <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
-                                    <input type="hidden" name="project_id" value="<?php echo $task['project_id']; ?>">
-                                    <button type="submit" name="status" value="pending" class="btn btn-outline-danger btn-sm rounded-circle" title="Pending">
-                                        <i class="bi bi-x-circle"></i>
-                                    </button>
-                                </form>
-                                <form method="post" class="d-inline me-2">
-                                    <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
-                                    <input type="hidden" name="project_id" value="<?php echo $task['project_id']; ?>">
-                                    <button type="submit" name="status" value="in_progress" class="btn btn-outline-warning btn-sm rounded-circle" title="In Progress">
-                                        <i class="bi bi-arrow-clockwise"></i>
-                                    </button>
-                                </form>
-                                <form method="post" class="d-inline me-2">
-                                    <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
-                                    <input type="hidden" name="project_id" value="<?php echo $task['project_id']; ?>">
-                                    <button type="submit" name="status" value="completed" class="btn btn-outline-success btn-sm rounded-circle" title="Completed">
-                                        <i class="bi bi-check-circle"></i>
-                                    </button>
-                                </form>
-                                
-                            </div>
+                            <form method="post" class="d-inline">
+                                <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                                <button type="submit" name="status" value="pending" class="btn btn-outline-danger btn-sm rounded-circle" title="Pending">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </form>
+                            <form method="post" class="d-inline">
+                                <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                                <button type="submit" name="status" value="in_progress" class="btn btn-outline-warning btn-sm rounded-circle" title="In Progress">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </form>
+                            <form method="post" class="d-inline">
+                                <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                                <button type="submit" name="status" value="completed" class="btn btn-outline-success btn-sm rounded-circle" title="Completed">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                            </form>
                         </td>
                         <td>
-                            <!-- Bouton Voir en détail avec espacement -->
-                            <a href="details.php?task_id=<?php echo $task['id']; ?>" class="btn btn-info btn-sm ms-3" title="Voir les détails">
+                            <a href="details.php?task_id=<?php echo $task['id']; ?>" class="btn btn-info btn-sm">
                                 <i class="bi bi-eye"></i> Voir
                             </a>
                         </td>
@@ -122,7 +124,7 @@ try {
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="4" class="text-center">Aucune tâche trouvée.</td>
+                    <td colspan="6" class="text-center">Aucune tâche trouvée.</td>
                 </tr>
             <?php endif; ?>
         </tbody>
