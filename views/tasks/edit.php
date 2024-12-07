@@ -30,23 +30,37 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = $_POST['title'];
-    $description = $_POST['description'];
-    $status = $_POST['status'];
-    $start_date = $_POST['start_date'];
-    $end_date = $_POST['end_date'];
-    $assignee_id = $_POST['assignee_id'];
+    if (isset($_POST['delete'])) {
+        try {
+            // Supprimer la tâche
+            $deleteStmt = $pdo->prepare("DELETE FROM Tasks WHERE id = ?");
+            $deleteStmt->execute([$task_id]);
 
-    try {
-        // Mettre à jour les informations de la tâche
-        $updateStmt = $pdo->prepare("UPDATE Tasks SET title = ?, description = ?, status = ?, start_date = ?, end_date = ?, assignee_id = ? WHERE id = ?");
-        $updateStmt->execute([$title, $description, $status, $start_date, $end_date, $assignee_id, $task_id]);
+            echo "Tâche supprimée avec succès.";
+            header("Location: ../index.php?selected_project=" . $task['project_id']); // Rediriger vers la page du projet
+            exit;
+        } catch (Exception $e) {
+            echo "Erreur lors de la suppression de la tâche : " . $e->getMessage();
+        }
+    } else {
+        $title = $_POST['title'];
+        $description = $_POST['description'];
+        $status = $_POST['status'];
+        $start_date = $_POST['start_date'];
+        $end_date = $_POST['end_date'];
+        $assignee_id = $_POST['assignee_id'];
 
-        echo "Tâche mise à jour avec succès.";
-        header("Location: ../../dashboard_admin.php?selected_project=" . $task['project_id']); // Rediriger vers la page du projet
-        exit;
-    } catch (Exception $e) {
-        echo "Erreur lors de la mise à jour de la tâche : " . $e->getMessage();
+        try {
+            // Mettre à jour les informations de la tâche
+            $updateStmt = $pdo->prepare("UPDATE Tasks SET title = ?, description = ?, status = ?, start_date = ?, end_date = ?, assignee_id = ? WHERE id = ?");
+            $updateStmt->execute([$title, $description, $status, $start_date, $end_date, $assignee_id, $task_id]);
+
+            echo "Tâche mise à jour avec succès.";
+            header("Location: ../../dashboard_admin.php?selected_project=" . $task['project_id']); // Rediriger vers la page du projet
+            exit;
+        } catch (Exception $e) {
+            echo "Erreur lors de la mise à jour de la tâche : " . $e->getMessage();
+        }
     }
 }
 ?>
@@ -61,6 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="container mt-5">
     <h1 class="text-center mb-4">Modifier Tâche</h1>
+
+    <!-- Formulaire de modification -->
     <form method="post">
         <div class="mb-3">
             <label for="title" class="form-label">Titre de la Tâche</label>
@@ -98,7 +114,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <button type="submit" class="btn btn-primary">Mettre à jour</button>
     </form>
+
+    <!-- Formulaire de suppression (placé tout en bas) -->
+    <form method="post" action="edit.php?task_id=<?php echo $task_id; ?>" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?');">
+        <button type="submit" name="delete" class="btn btn-danger mt-3">Supprimer la Tâche</button>
+    </form>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <?php include '../../includes/footer.php'; ?>
 
