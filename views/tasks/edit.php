@@ -49,14 +49,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $start_date = $_POST['start_date'];
         $end_date = $_POST['end_date'];
         $assignee_id = $_POST['assignee_id'];
+        $priority = $_POST['priority'];
 
         try {
             // Mettre à jour les informations de la tâche
-            $updateStmt = $pdo->prepare("UPDATE Tasks SET title = ?, description = ?, status = ?, start_date = ?, end_date = ?, assignee_id = ? WHERE id = ?");
-            $updateStmt->execute([$title, $description, $status, $start_date, $end_date, $assignee_id, $task_id]);
+            $updateStmt = $pdo->prepare("UPDATE Tasks SET title = ?, description = ?, status = ?, start_date = ?, end_date = ?, assignee_id = ?, priority = ? WHERE id = ?");
+            $updateStmt->execute([$title, $description, $status, $start_date, $end_date, $assignee_id, $priority, $task_id]);
 
             echo "Tâche mise à jour avec succès.";
-            header("Location: ../../dashboard_admin.php?selected_project=" . $task['project_id']); // Rediriger vers la page du projet
+            header("Location: ../index.php?selected_project=" . $task['project_id']); // Rediriger vers la page du projet
             exit;
         } catch (Exception $e) {
             echo "Erreur lors de la mise à jour de la tâche : " . $e->getMessage();
@@ -110,6 +111,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php echo htmlspecialchars($user['prenom'] . ' ' . $user['nom']); ?>
                     </option>
                 <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="priority" class="form-label">Priorité</label>
+            <select class="form-select" id="priority" name="priority" required>
+                <option value="faible" <?php if ($task['priority'] == 'faible') echo 'selected'; ?>>faible</option>
+                <option value="modéré" <?php if ($task['priority'] == 'modéré') echo 'selected'; ?>>modéré</option>
+                <option value="élevé" <?php if ($task['priority'] == 'élevé') echo 'selected'; ?>>élevé</option>
             </select>
         </div>
         <button type="submit" class="btn btn-primary">Mettre à jour</button>
