@@ -86,27 +86,37 @@ try {
                             <?php endif; ?>
                         </td>
                         <td>
-                            <form method="post" class="d-inline">
-                                <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
-                                <input type="hidden" name="project_id" value="<?php echo $task['project_id']; ?>">
-                                <button type="submit" name="status" value="pending" class="btn btn-outline-danger btn-sm rounded-circle" title="Pending">
-                                    <i class="bi bi-x-circle"></i>
-                                </button>
-                            </form>
-                            <form method="post" class="d-inline">
-                                <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
-                                <input type="hidden" name="project_id" value="<?php echo $task['project_id']; ?>">
-                                <button type="submit" name="status" value="in_progress" class="btn btn-outline-warning btn-sm rounded-circle" title="In Progress">
-                                    <i class="bi bi-arrow-clockwise"></i>
-                                </button>
-                            </form>
-                            <form method="post" class="d-inline">
-                                <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
-                                <input type="hidden" name="project_id" value="<?php echo $task['project_id']; ?>">
-                                <button type="submit" name="status" value="completed" class="btn btn-outline-success btn-sm rounded-circle" title="Completed">
-                                    <i class="bi bi-check-circle"></i>
-                                </button>
-                            </form>
+                            <!-- Boutons d'action -->
+                            <div class="d-flex align-items-center">
+                                <form method="post" class="d-inline me-2">
+                                    <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                                    <input type="hidden" name="project_id" value="<?php echo $task['project_id']; ?>">
+                                    <button type="submit" name="status" value="pending" class="btn btn-outline-danger btn-sm rounded-circle" title="Pending">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </form>
+                                <form method="post" class="d-inline me-2">
+                                    <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                                    <input type="hidden" name="project_id" value="<?php echo $task['project_id']; ?>">
+                                    <button type="submit" name="status" value="in_progress" class="btn btn-outline-warning btn-sm rounded-circle" title="In Progress">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </form>
+                                <form method="post" class="d-inline me-2">
+                                    <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                                    <input type="hidden" name="project_id" value="<?php echo $task['project_id']; ?>">
+                                    <button type="submit" name="status" value="completed" class="btn btn-outline-success btn-sm rounded-circle" title="Completed">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                </form>
+                                
+                            </div>
+                        </td>
+                        <td>
+                            <!-- Bouton Voir en détail avec espacement -->
+                            <a href="details.php?task_id=<?php echo $task['id']; ?>" class="btn btn-info btn-sm ms-3" title="Voir les détails">
+                                <i class="bi bi-eye"></i> Voir
+                            </a>
                         </td>
                     </tr>
                 <?php endforeach; ?>
