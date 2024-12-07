@@ -73,6 +73,7 @@ try {
                 <th>Description</th>
                 <th>Assigné à</th>
                 <th>Statut</th>
+                <th>Priorité</th>
                 <th>Actions</th>
                 <th>Voir Détails</th>
             </tr>
@@ -94,6 +95,27 @@ try {
                             <?php elseif ($task['status'] == 'completed'): ?>
                                 <span class="badge bg-success">Completed</span>
                             <?php endif; ?>
+                        </td>
+                        <td>
+                            <!-- Priorité sous forme de batterie -->
+                            <div class="d-flex align-items-center">
+                                <?php if ($task['priority'] == 'faible'): ?>
+                                    <!-- 1 barre remplie pour faible priorité -->
+                                    <i class="bi bi-battery-half text-success" style="font-size: 1.5rem;" title="Faible priorité"></i>
+                                    <i class="bi bi-battery text-muted" style="font-size: 1.5rem;" title="Faible priorité"></i>
+                                    <i class="bi bi-battery text-muted" style="font-size: 1.5rem;" title="Faible priorité"></i>
+                                <?php elseif ($task['priority'] == 'modéré'): ?>
+                                    <!-- 2 barres remplies pour priorité modérée -->
+                                    <i class="bi bi-battery-full text-warning" style="font-size: 1.5rem;" title="Priorité modérée"></i>
+                                    <i class="bi bi-battery-full text-warning" style="font-size: 1.5rem;" title="Priorité modérée"></i>
+                                    <i class="bi bi-battery text-muted" style="font-size: 1.5rem;" title="Priorité modérée"></i>
+                                <?php elseif ($task['priority'] == 'élevé'): ?>
+                                    <!-- 3 barres remplies pour haute priorité -->
+                                    <i class="bi bi-battery-full text-danger" style="font-size: 1.5rem;" title="Haute priorité"></i>
+                                    <i class="bi bi-battery-full text-danger" style="font-size: 1.5rem;" title="Haute priorité"></i>
+                                    <i class="bi bi-battery-full text-danger" style="font-size: 1.5rem;" title="Haute priorité"></i>
+                                <?php endif; ?>
+                            </div>
                         </td>
                         <td>
                             <form method="post" class="d-inline">
@@ -124,7 +146,7 @@ try {
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="6" class="text-center">Aucune tâche trouvée.</td>
+                    <td colspan="7" class="text-center">Aucune tâche trouvée.</td>
                 </tr>
             <?php endif; ?>
         </tbody>
