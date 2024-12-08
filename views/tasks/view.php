@@ -35,16 +35,13 @@ try {
         $projectsStmt->execute([$user_id]);
     }
     $projects = $projectsStmt->fetchAll();
-    
-    // Récupérer les tâches associées aux projets avec l'information des utilisateurs assignés
+
+    // Récupérer les tâches associées aux projets
     $tasks = [];
     foreach ($projects as $project) {
-        $tasksStmt = $pdo->prepare("
-            SELECT tasks.*, CONCAT(users.nom, ' ', users.prenom) AS assignee_name 
-            FROM tasks 
-            LEFT JOIN users ON tasks.assignee_id = users.id 
-            WHERE tasks.project_id = ?
-        ");
+        $tasksStmt = $pdo->prepare("SELECT tasks.*, projects.title as project_title FROM tasks 
+                                    JOIN projects ON tasks.project_id = projects.id 
+                                    WHERE tasks.project_id = ?");
         $tasksStmt->execute([$project['id']]);
         $projectTasks = $tasksStmt->fetchAll();
         $tasks = array_merge($tasks, $projectTasks);
@@ -54,7 +51,6 @@ try {
     exit;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -69,6 +65,7 @@ try {
     <table class="table table-striped">
         <thead>
             <tr>
+                <th>Projet</th>
                 <th>Titre</th>
                 <th>Description</th>
                 <th>Assigné à</th>
@@ -82,10 +79,25 @@ try {
             <?php if (!empty($tasks)): ?>
                 <?php foreach ($tasks as $task): ?>
                     <tr>
+                        <td><?php echo htmlspecialchars($task['project_title']); ?></td>
                         <td><?php echo htmlspecialchars($task['title']); ?></td>
                         <td><?php echo htmlspecialchars($task['description']); ?></td>
                         <td>
-                            <?php echo !empty($task['assignee_name']) ? htmlspecialchars($task['assignee_name']) : 'Non assigné'; ?>
+                            <?php
+                            // Récupérer les IDs des assignés et leurs informations
+                            $assigneeIds = explode(',', $task['assignee_id']);
+                            $assignees = [];
+                            foreach ($assigneeIds as $id) {
+                                $assigneeStmt = $pdo->prepare("SELECT CONCAT(prenom, ' ', nom) AS full_name FROM users WHERE id = ?");
+                                $assigneeStmt->execute([$id]);
+                                $assignee = $assigneeStmt->fetchColumn();
+                                if ($assignee) {
+                                    $assignees[] = htmlspecialchars($assignee);
+                                }
+                            }
+                            // Afficher chaque assigné sur une nouvelle ligne
+                            echo implode('<br>', $assignees) ?: 'Non assigné';
+                            ?>
                         </td>
                         <td>
                             <?php if ($task['status'] == 'pending'): ?>
@@ -100,19 +112,11 @@ try {
                             <!-- Priorité sous forme de batterie -->
                             <div class="d-flex align-items-center">
                                 <?php if ($task['priority'] == 'faible'): ?>
-                                    <!-- 1 barre remplie pour faible priorité -->
-                                    <i class="bi bi-battery-half text-success" style="font-size: 1.5rem;" title="Faible priorité"></i>
-                                    <i class="bi bi-battery text-muted" style="font-size: 1.5rem;" title="Faible priorité"></i>
-                                    <i class="bi bi-battery text-muted" style="font-size: 1.5rem;" title="Faible priorité"></i>
+                                    <i class="bi bi-battery text-success" style="font-size: 1.5rem;" title="Faible priorité"></i>
                                 <?php elseif ($task['priority'] == 'modéré'): ?>
-                                    <!-- 2 barres remplies pour priorité modérée -->
+                                    <i class="bi bi-battery-half text-warning" style="font-size: 1.5rem;" title="Priorité modérée"></i>
                                     <i class="bi bi-battery-full text-warning" style="font-size: 1.5rem;" title="Priorité modérée"></i>
-                                    <i class="bi bi-battery-full text-warning" style="font-size: 1.5rem;" title="Priorité modérée"></i>
-                                    <i class="bi bi-battery text-muted" style="font-size: 1.5rem;" title="Priorité modérée"></i>
                                 <?php elseif ($task['priority'] == 'élevé'): ?>
-                                    <!-- 3 barres remplies pour haute priorité -->
-                                    <i class="bi bi-battery-full text-danger" style="font-size: 1.5rem;" title="Haute priorité"></i>
-                                    <i class="bi bi-battery-full text-danger" style="font-size: 1.5rem;" title="Haute priorité"></i>
                                     <i class="bi bi-battery-full text-danger" style="font-size: 1.5rem;" title="Haute priorité"></i>
                                 <?php endif; ?>
                             </div>
