@@ -73,9 +73,6 @@ try {
             transform: scale(1.05);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
-        .card h3 {
-            margin-bottom: 20px;
-        }
         .progress-bar {
             background-color: #36b37e;
             transition: width 1s ease-in-out;
@@ -121,9 +118,8 @@ try {
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-body text-center">
-                    <h3 class="card-title">Tâches</h3>
-                    <a href="tasks/create.php?project_id=<?php echo $project_id; ?>" class="btn btn-primary">Créer</a>
-                    <a href="tasks/view.php?project_id=<?php echo $project_id; ?>" class="btn btn-success">Voir</a>
+                    <h3 class="card-title">Messagerie</h3>
+                    <a href="messages/index.php?project_id=<?php echo $project_id; ?>" class="btn btn-dark">Gérer</a>
                 </div>
             </div>
             <div class="card mb-4">
@@ -137,6 +133,49 @@ try {
         </div>
     </div>
     <div class="row">
+        <!-- Liste des Tâches -->
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title d-flex justify-content-between">
+                        Liste des Tâches
+                        <a href="tasks/create.php?project_id=<?php echo $project_id; ?>" class="btn btn-primary btn-sm">Créer</a>
+                    </h3>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Tâche</th>
+                                <th>Description</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($tasks as $task): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($task['title']); ?></td>
+                                    <td><?php echo htmlspecialchars($task['description']); ?></td>
+                                    <td>
+                                        <?php if ($task['status'] == 'pending'): ?>
+                                            <span class="badge bg-danger">Pending</span>
+                                        <?php elseif ($task['status'] == 'in_progress'): ?>
+                                            <span class="badge bg-warning text-dark">In Progress</span>
+                                        <?php elseif ($task['status'] == 'completed'): ?>
+                                            <span class="badge bg-success">Completed</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <a href="tasks/view.php?task_id=<?php echo $task['id']; ?>" class="btn btn-success btn-sm">Voir</a>
+                                        <a href="tasks/edit.php?task_id=<?php echo $task['id']; ?>" class="btn btn-primary btn-sm">Modifier</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- Équipe -->
         <div class="col-md-12">
             <div class="card mb-4">
                 <div class="card-body">
@@ -155,51 +194,6 @@ try {
                                     <td><?php echo htmlspecialchars($member['prenom']) . ' ' . htmlspecialchars($member['nom']); ?></td>
                                     <td><?php echo htmlspecialchars($member['email']); ?></td>
                                     <td><?php echo htmlspecialchars($member['post']); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-body text-center">
-                    <h3 class="card-title">Messagerie</h3>
-                    <a href="messages/index.php?project_id=<?php echo $project_id; ?>" class="btn btn-dark">Gérer</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h3 class="card-title">Liste des Tâches</h3>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Tâche</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($tasks as $task): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($task['title']); ?></td>
-                                    <td>
-                                        <?php if ($task['status'] == 'pending'): ?>
-                                            <span class="badge bg-danger">Pending</span>
-                                        <?php elseif ($task['status'] == 'in_progress'): ?>
-                                            <span class="badge bg-warning text-dark">In Progress</span>
-                                        <?php elseif ($task['status'] == 'completed'): ?>
-                                            <span class="badge bg-success">Completed</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <a href="tasks/edit.php?task_id=<?php echo $task['id']; ?>" class="btn btn-primary btn-sm">Modifier</a>
-                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
