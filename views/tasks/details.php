@@ -31,13 +31,6 @@ try {
         exit;
     }
 
-    // Vérifier si l'utilisateur est assigné à cette tâche
-    $assignee_ids = explode(',', $task['assignee_id']); // Liste des assignés
-    if (!in_array($user_id, $assignee_ids)) {
-        echo "Accès refusé. Vous n'êtes pas assigné à cette tâche.";
-        exit;
-    }
-
 } catch (PDOException $e) {
     echo "Erreur : " . $e->getMessage();
     exit;
@@ -71,20 +64,21 @@ try {
             <p><strong>Projet associé :</strong> <?php echo htmlspecialchars($task['project_title']); ?></p>
             <p><strong>Assignés :</strong></p>
             <ul>
-                <?php
-                // Afficher les noms des assignés
-                $assigneesStmt = $pdo->prepare("
-                    SELECT id, nom, prenom 
-                    FROM Users 
-                    WHERE id IN (" . implode(',', array_fill(0, count($assignee_ids), '?')) . ")
-                ");
-                $assigneesStmt->execute($assignee_ids);
-                $assignees = $assigneesStmt->fetchAll();
-
-                foreach ($assignees as $assignee) {
-                    echo "<li>" . htmlspecialchars($assignee['prenom']) . " " . htmlspecialchars($assignee['nom']) . "</li>";
-                }
-                ?>
+                <td>
+                    <?php
+                    $assigneeIds = explode(',', $task['assignee_id']);
+                    $assignees = [];
+                    foreach ($assigneeIds as $id) {
+                        $assigneeStmt = $pdo->prepare("SELECT CONCAT(prenom, ' ', nom) AS full_name FROM users WHERE id = ?");
+                        $assigneeStmt->execute([$id]);
+                        $assignee = $assigneeStmt->fetchColumn();
+                        if ($assignee) {
+                            $assignees[] = htmlspecialchars($assignee);
+                        }
+                    }
+                    echo implode('<br>', $assignees) ?: 'Non assigné';
+                    ?>
+                </td>
             </ul>
         </div>
         <div class="card-footer text-center">

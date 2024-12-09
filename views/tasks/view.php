@@ -16,9 +16,43 @@ try {
         $status = $_POST['status'];
         $task_id = $_POST['task_id'];
 
-        // Mise à jour du statut de la tâche
-        $updateStmt = $pdo->prepare("UPDATE tasks SET status = ? WHERE id = ?");
-        $updateStmt->execute([$status, $task_id]);
+        // Vérifier si l'utilisateur est assigné à la tâche
+        $checkAssigneeStmt = $pdo->prepare("
+            SELECT COUNT(*) 
+            FROM tasks 
+            WHERE id = ? AND (FIND_IN_SET(?, assignee_id) > 0 OR ? = 'admin')
+        ");
+        $checkAssigneeStmt->execute([$task_id, $user_id, $user_role]);
+        $isAssigned = $checkAssigneeStmt->fetchColumn();
+
+        if ($isAssigned) {
+            // Mise à jour du statut de la tâche
+            $updateStmt = $pdo->prepare("UPDATE tasks SET status = ? WHERE id = ?");
+            $updateStmt->execute([$status, $task_id]);
+        } else {
+            $error_message = "Vous n'êtes pas assigné à cette tâche.";
+        }
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['view_task_id'])) {
+        $task_id = $_POST['view_task_id'];
+
+        // Vérifier si l'utilisateur est assigné à la tâche ou admin
+        $checkAssigneeStmt = $pdo->prepare("
+            SELECT COUNT(*) 
+            FROM tasks 
+            WHERE id = ? AND (FIND_IN_SET(?, assignee_id) > 0 OR ? = 'admin')
+        ");
+        $checkAssigneeStmt->execute([$task_id, $user_id, $user_role]);
+        $isAssigned = $checkAssigneeStmt->fetchColumn();
+
+        if ($isAssigned) {
+            // Rediriger vers la page de détails
+            header("Location: details.php?task_id=" . $task_id);
+            exit;
+        } else {
+            $error_message = "Vous n'etes pas assigné a cette tache.";
+        }
     }
 
     if ($user_role === 'admin') {
@@ -56,12 +90,15 @@ try {
 <head>
     <meta charset="UTF-8">
     <title>Voir les Tâches</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
 <body>
 <div class="container mt-5">
     <h1 class="mb-4">Liste des Tâches</h1>
+    <?php if (isset($error_message)): ?>
+        <div class="alert alert-danger" role="alert"><?php echo $error_message; ?></div>
+    <?php endif; ?>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -84,7 +121,6 @@ try {
                         <td><?php echo htmlspecialchars($task['description']); ?></td>
                         <td>
                             <?php
-                            // Récupérer les IDs des assignés et leurs informations
                             $assigneeIds = explode(',', $task['assignee_id']);
                             $assignees = [];
                             foreach ($assigneeIds as $id) {
@@ -95,7 +131,6 @@ try {
                                     $assignees[] = htmlspecialchars($assignee);
                                 }
                             }
-                            // Afficher chaque assigné sur une nouvelle ligne
                             echo implode('<br>', $assignees) ?: 'Non assigné';
                             ?>
                         </td>
@@ -142,21 +177,24 @@ try {
                             </form>
                         </td>
                         <td>
-                            <a href="details.php?task_id=<?php echo $task['id']; ?>" class="btn btn-info btn-sm">
-                                <i class="bi bi-eye"></i> Voir
-                            </a>
+                            <form method="post">
+                                <input type="hidden" name="view_task_id" value="<?php echo $task['id']; ?>">
+                                <button type="submit" class="btn btn-info btn-sm">
+                                    <i class="bi bi-eye"></i> Voir
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="7" class="text-center">Aucune tâche trouvée.</td>
+                    <td colspan="8" class="text-center">Aucune tâche trouvée.</td>
                 </tr>
             <?php endif; ?>
         </tbody>
     </table>
 </div>
 <?php include '../../includes/footer.php'; ?>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
