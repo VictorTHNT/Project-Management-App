@@ -150,7 +150,6 @@ try {
                                     <i class="bi bi-battery text-success" style="font-size: 1.5rem;" title="Faible priorité"></i>
                                 <?php elseif ($task['priority'] == 'modéré'): ?>
                                     <i class="bi bi-battery-half text-warning" style="font-size: 1.5rem;" title="Priorité modérée"></i>
-                                    <i class="bi bi-battery-full text-warning" style="font-size: 1.5rem;" title="Priorité modérée"></i>
                                 <?php elseif ($task['priority'] == 'élevé'): ?>
                                     <i class="bi bi-battery-full text-danger" style="font-size: 1.5rem;" title="Haute priorité"></i>
                                 <?php endif; ?>

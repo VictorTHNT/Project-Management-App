@@ -62,7 +62,6 @@ try {
             <p><strong>Date de début :</strong> <?php echo htmlspecialchars($task['start_date']); ?></p>
             <p><strong>Date de fin :</strong> <?php echo htmlspecialchars($task['end_date']); ?></p>
             <p><strong>Projet associé :</strong> <?php echo htmlspecialchars($task['project_title']); ?></p>
-            <p><strong>Assignés :</strong></p>
         </div>
         <div class="card-footer text-center">
             <a href="view.php" class="btn btn-primary">Retour à la liste des tâches</a>
