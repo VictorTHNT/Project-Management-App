@@ -1,41 +1,68 @@
 <?php
-session_start();
 include '../../includes/connect.php';
 
+// Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../auth/login.php');
+    header("Location: ../auth/login.php");
     exit;
 }
 
 $user_id = $_SESSION['user_id'];
-$notification_id = isset($_GET['id']) ? $_GET['id'] : null;
 
-if ($notification_id) {
-    // Récupérer la notification
-    $stmt = $pdo->prepare("SELECT * FROM notifications WHERE id = ? AND user_id = ?");
-    $stmt->execute([$notification_id, $user_id]);
-    $notification = $stmt->fetch();
+try {
+    // Récupérer les tâches dont la date de fin est aujourd'hui ou dépassée
+    $stmt = $pdo->prepare("
+        SELECT Tasks.id, Tasks.title, Tasks.end_date, Tasks.assignee_id, Tasks.project_id, Projects.title AS project_title
+        FROM Tasks
+        JOIN Projects ON Tasks.project_id = Projects.id
+        WHERE Tasks.end_date <= CURDATE() AND FIND_IN_SET(?, Tasks.assignee_id)
+        ORDER BY Tasks.end_date ASC
+    ");
+    $stmt->execute([$user_id]);
+    $tasks = $stmt->fetchAll();
 
-    if ($notification) {
-        // Marquer la notification comme lue
-        $updateStmt = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE id = ?");
-        $updateStmt->execute([$notification_id]);
-
-        // Rediriger vers le projet, la tâche ou le fichier concerné
-        if ($notification['project_id']) {
-            header('Location: ../projects/view.php?id=' . $notification['project_id']);
-        } elseif ($notification['task_id']) {
-            header('Location: ../tasks/view.php?id=' . $notification['task_id']);
-        } elseif ($notification['file_id']) {
-            header('Location: ../files/view.php?id=' . $notification['file_id']);
-        } else {
-            header('Location: ../../dashboard.php');
+    if (empty($tasks)) {
+        echo "<p>Aucune notification pour le moment.</p>";
+    } else {
+        echo "<h2>Notifications</h2>";
+        echo "<ul class='list-group'>";
+        foreach ($tasks as $task) {
+            $date = htmlspecialchars($task['end_date']);
+            $title = htmlspecialchars($task['title']);
+            $project = htmlspecialchars($task['project_title']);
+            echo "<li class='list-group-item'>";
+            echo "<strong>Projet :</strong> $project<br>";
+            echo "<strong>Tâche :</strong> $title<br>";
+            echo "<strong>Date de fin :</strong> $date<br>";
+            echo "</li>";
         }
-        exit;
+        echo "</ul>";
     }
+} catch (PDOException $e) {
+    echo "Erreur : " . $e->getMessage();
+    exit;
 }
-
-// Rediriger vers le tableau de bord si la notification est introuvable
-header('Location: ../../dashboard.php');
-exit;
 ?>
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Notifications</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <?php include '../../includes/navbar.php'; ?>
+    <h1 class="text-center">Mes Notifications</h1>
+    <div>
+        <?php if (!empty($tasks)): ?>
+            <div class="alert alert-warning">
+                <strong>Attention :</strong> Vous avez des tâches à gérer.
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+<?php include '../../includes/footer.php'; ?>
+</body>
+</html>

@@ -17,7 +17,7 @@ $stmt->execute([$user_id]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Récupérer les notifications non lues
-$notificationsStmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC");
+$notificationsStmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = ?");
 $notificationsStmt->execute([$user_id]);
 $notifications = $notificationsStmt->fetchAll();
 $notificationCount = count($notifications);
@@ -60,6 +60,9 @@ $user_role = $user['role'];
                 </li>
             </ul>
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+
+                <!-- Affichage des notifications -->
+
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Notifications <span class="badge bg-danger"><?php echo $notificationCount; ?></span>
@@ -78,6 +81,7 @@ $user_role = $user['role'];
                         <?php endif; ?>
                     </ul>
                 </li>
+
                 <li class="nav-item d-flex align-items-center">
                     <img src="/Project-Management-App/<?php echo htmlspecialchars($profile_image); ?>" alt="Profile Image" width="30" height="30" class="rounded-circle me-2">
                     <span class="navbar-text">

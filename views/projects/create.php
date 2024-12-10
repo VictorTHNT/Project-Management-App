@@ -67,22 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $project_id = $pdo->lastInsertId();
 
-        // Notifications pour les membres de l'équipe & création du projet
-        $teamMembersStmt = $pdo->prepare("SELECT DISTINCT user_id FROM user_team WHERE project_id = ?");
-        $teamMembersStmt->execute([$project_id]);
-        $teamMembers = $teamMembersStmt->fetchAll(PDO::FETCH_COLUMN);
 
-        foreach ($teamMembers as $teamMemberId) {
-            $notifStmt = $pdo->prepare("INSERT INTO notifications 
-                (user_id, project_id, message) 
-                VALUES (?, ?, ?)");
-            
-            $notifStmt->execute([
-                $teamMemberId, 
-                $project_id, 
-                "Nouveau projet créé : $title"
-            ]);
-        }
         
         // Gestion de l'équipe
         if ($team_option == 'new') {
@@ -134,8 +119,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
             }
         }
-
-        
 
         $pdo->commit();
         header("Location: ../index.php?selected_project=$project_id");

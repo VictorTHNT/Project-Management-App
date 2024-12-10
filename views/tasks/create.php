@@ -36,16 +36,26 @@ try {
 
         $pdo->beginTransaction();
         try {
-            // Insérer la tâche avec les IDs des assignés
+            // Insérer la tâche dans la table Tasks
             $stmt = $pdo->prepare("INSERT INTO Tasks (title, description, status, start_date, end_date, priority, project_id, assignee_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([$title, $description, $status, $start_date, $end_date, $priority, $selected_project_id, $assignee_ids]);
+
+            // Récupérer l'ID de la tâche nouvellement créée
+            $task_id = $pdo->lastInsertId();
+
+            // Ajouter une notification pour chaque utilisateur assigné
+            foreach ($assignees as $assignee_id) {
+                $message = "Nouvelle tâche assignée : '$title'. À terminer avant le $end_date.";
+                $notificationStmt = $pdo->prepare("INSERT INTO Notifications (user_id, message, created_at) VALUES (?, ?, NOW())");
+                $notificationStmt->execute([$assignee_id, $message]);
+            }
 
             $pdo->commit();
             header("Location: view.php?project_id=" . $selected_project_id);
             exit;
         } catch (Exception $e) {
             $pdo->rollBack();
-            throw $e;
+            echo "Erreur lors de la création de la tâche : " . $e->getMessage();
         }
     }
 } catch (PDOException $e) {
@@ -53,6 +63,7 @@ try {
     exit;
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="fr">
