@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : mer. 04 déc. 2024 à 12:31
+-- Généré le : mar. 10 déc. 2024 à 16:01
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -104,9 +104,9 @@ CREATE TABLE `projects` (
 --
 
 INSERT INTO `projects` (`id`, `title`, `description`, `start_date`, `end_date`, `budget`, `manager_id`, `color`, `cahier_charge`, `user_team_id`) VALUES
-(22, 'DZ', 'DZ', '0001-01-01', '0001-01-01', 0.00, 1, '#480f0f', NULL, NULL),
-(27, 'dsq', 'dqs', '0006-05-04', '0034-02-03', 435.00, 5, '#000000', NULL, NULL),
-(35, 'azer', 'azeretry', '7777-09-09', '6777-06-07', 4678.00, 5, '#000000', NULL, NULL);
+(42, 'ECE', 'Programmation d\'une application pour la gestion de projet', '2024-11-23', '2024-12-12', 0.00, 1, '#007bff', 'uploads/project_files/67524527505b9_Projet Application de Gestion de Tâches.docx', NULL),
+(43, 'Test', 'ceci est un projet pour faire les test', '2024-12-12', '2024-12-24', 0.00, 1, '#ff0000', NULL, NULL),
+(44, 'test', 'ceci est un test', '2024-12-09', '2025-01-10', 100.00, 5, '#990000', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -122,8 +122,18 @@ CREATE TABLE `tasks` (
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   `project_id` int(11) DEFAULT NULL,
-  `assignee_id` int(11) DEFAULT NULL
+  `assignee_id` varchar(255) DEFAULT NULL,
+  `priority` enum('faible','modéré','élevé') NOT NULL DEFAULT 'modéré'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `tasks`
+--
+
+INSERT INTO `tasks` (`id`, `title`, `description`, `status`, `start_date`, `end_date`, `project_id`, `assignee_id`, `priority`) VALUES
+(1, 'dsqd', 'dsqdsqd', 'pending', '4444-04-04', '4444-04-04', 42, '1', 'élevé'),
+(2, 'dsqdq', 'dsqdqs', 'pending', '4444-04-04', '4444-04-04', 42, '1,5', 'faible'),
+(3, 'ceci est un test', 'teste dui projet test', 'pending', '2024-12-10', '2024-12-12', 44, '1', 'faible');
 
 -- --------------------------------------------------------
 
@@ -167,6 +177,19 @@ CREATE TABLE `user_team` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- Déchargement des données de la table `user_team`
+--
+
+INSERT INTO `user_team` (`team_id`, `team_name`, `project_id`, `user_id`, `post`) VALUES
+(54, 'ECE', 42, 1, 'Manager'),
+(55, 'ECE', 42, 6, 'developeur'),
+(56, 'ECE', 42, 5, 'Developeur'),
+(57, 'test', 43, 1, 'Manager'),
+(58, 'test', 43, 4, 'test'),
+(59, 'test', 44, 1, 'Manager'),
+(60, 'test', 44, 5, 'Developeur');
+
+--
 -- Index pour les tables déchargées
 --
 
@@ -207,7 +230,8 @@ ALTER TABLE `notifications`
 -- Index pour la table `projects`
 --
 ALTER TABLE `projects`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `projects_ibfk_1` (`manager_id`);
 
 --
 -- Index pour la table `tasks`
@@ -262,13 +286,13 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT pour la table `projects`
 --
 ALTER TABLE `projects`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT pour la table `tasks`
 --
 ALTER TABLE `tasks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT pour la table `users`
@@ -280,7 +304,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT pour la table `user_team`
 --
 ALTER TABLE `user_team`
-  MODIFY `team_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `team_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- Contraintes pour les tables déchargées
@@ -320,21 +344,7 @@ ALTER TABLE `notifications`
 --
 ALTER TABLE `projects`
   ADD CONSTRAINT `projects_ibfk_1` FOREIGN KEY (`manager_id`) REFERENCES `users` (`id`);
-
---
--- Contraintes pour la table `tasks`
---
-ALTER TABLE `tasks`
-  ADD CONSTRAINT `tasks_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
-  ADD CONSTRAINT `tasks_ibfk_2` FOREIGN KEY (`assignee_id`) REFERENCES `users` (`id`);
-
---
--- Contraintes pour la table `user_team`
---
--- ALTER TABLE `user_team`
---   ADD CONSTRAINT `user_team_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
---   ADD CONSTRAINT `user_team_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
--- COMMIT;
+COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
