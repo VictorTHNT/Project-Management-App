@@ -212,30 +212,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 <script>
-document.getElementById('new_team_option').addEventListener('change', function() {
-    document.getElementById('new_team_fields').style.display = 'block';
-    document.getElementById('existing_team_fields').style.display = 'none';
-});
+    // Écouteur d'événement sur le changement de l'option "new_team_option"
+    document.getElementById('new_team_option').addEventListener('change', function() {
+        // Lorsque l'option "new_team_option" est sélectionnée, afficher le formulaire pour une nouvelle équipe
+        document.getElementById('new_team_fields').style.display = 'block';
+        // Cacher le formulaire pour une équipe existante
+        document.getElementById('existing_team_fields').style.display = 'none';
+    });
 
-document.getElementById('existing_team_option').addEventListener('change', function() {
-    document.getElementById('new_team_fields').style.display = 'none';
-    document.getElementById('existing_team_fields').style.display = 'block';
-});
+    // Écouteur d'événement sur le changement de l'option "existing_team_option"
+    document.getElementById('existing_team_option').addEventListener('change', function() {
+        // Lorsque l'option "existing_team_option" est sélectionnée, afficher le formulaire pour une équipe existante
+        document.getElementById('new_team_fields').style.display = 'none';
+        // Cacher le formulaire pour une nouvelle équipe
+        document.getElementById('existing_team_fields').style.display = 'block';
+    });
 
-document.getElementById('add_member').addEventListener('click', function() {
-    const membersFields = document.getElementById('members_fields');
-    const index = membersFields.children.length / 2;
-    membersFields.insertAdjacentHTML('beforeend', `
-        <div class="mb-3">
-            <label for="member_email_${index}" class="form-label">Email du membre</label>
-            <input type="email" class="form-control" id="member_email_${index}" name="members[${index}][email]">
-        </div>
-        <div class="mb-3">
-            <label for="member_role_${index}" class="form-label">Rôle du membre</label>
-            <input type="text" class="form-control" id="member_role_${index}" name="members[${index}][role]">
-        </div>
-    `);
-});
+    // Écouteur d'événement sur le clic du bouton "add_member" pour ajouter un membre à l'équipe
+    document.getElementById('add_member').addEventListener('click', function() {
+        // Récupérer l'élément contenant les champs des membres de l'équipe
+        const membersFields = document.getElementById('members_fields');
+        // Calculer un index pour l'élément à ajouter en divisant le nombre d'enfants de 'membersFields' par 2
+        // (Chaque membre aura deux champs : email et rôle)
+        const index = membersFields.children.length / 2;
+        
+        // Ajouter de nouveaux champs HTML pour le membre à la fin du container 'members_fields'
+        membersFields.insertAdjacentHTML('beforeend', `
+            <div class="mb-3">
+                <label for="member_email_${index}" class="form-label">Email du membre</label>
+                <input type="email" class="form-control" id="member_email_${index}" name="members[${index}][email]">
+            </div>
+            <div class="mb-3">
+                <label for="member_role_${index}" class="form-label">Rôle du membre</label>
+                <input type="text" class="form-control" id="member_role_${index}" name="members[${index}][role]">
+            </div>
+        `);
+    });
 </script>
+
 </body>
 </html>
