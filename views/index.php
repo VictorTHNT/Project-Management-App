@@ -20,7 +20,7 @@ try {
     }
 
     $membersStmt = $pdo->prepare("
-        SELECT Users.nom, Users.prenom, Users.email, User_Team.post, User_Team.team_name 
+        SELECT Users.nom, Users.prenom, Users.email, User_Team.post, User_Team.team_name, User_Team.user_id 
         FROM Users 
         JOIN User_Team ON Users.id = User_Team.user_id 
         WHERE User_Team.project_id = ?
@@ -40,6 +40,12 @@ try {
         }
     }
     $progress = $totalTasks > 0 ? ($completedTasks / $totalTasks) * 100 : 0;
+
+    // Vérification d'appartenance au projet
+    $currentUserId = $_SESSION['user_id']; // ID de l'utilisateur connecté
+    $isMember = array_filter($members, function ($member) use ($currentUserId) {
+        return $member['user_id'] == $currentUserId;
+    });
 
 } catch (Exception $e) {
     echo "Erreur : " . $e->getMessage();
@@ -141,37 +147,84 @@ try {
                         Liste des Tâches
                         <a href="tasks/create.php?project_id=<?php echo $project_id; ?>" class="btn btn-primary btn-sm">Créer</a>
                     </h3>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Tâche</th>
-                                <th>Description</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($tasks as $task): ?>
+                    <?php if (!$isMember): ?>
+                        <div class="alert alert-danger text-center">
+                            Vous ne faites pas partie de ce projet. Vous ne pouvez pas voir les tâches.
+                        </div>
+                    <?php else: ?>
+                        <table class="table table-striped">
+                            <thead>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($task['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($task['description']); ?></td>
-                                    <td>
-                                        <?php if ($task['status'] == 'pending'): ?>
-                                            <span class="badge bg-danger">Pending</span>
-                                        <?php elseif ($task['status'] == 'in_progress'): ?>
-                                            <span class="badge bg-warning text-dark">In Progress</span>
-                                        <?php elseif ($task['status'] == 'completed'): ?>
-                                            <span class="badge bg-success">Completed</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <a href="tasks/view.php?task_id=<?php echo $task['id']; ?>" class="btn btn-success btn-sm">Voir</a>
-                                        <a href="tasks/edit.php?task_id=<?php echo $task['id']; ?>" class="btn btn-primary btn-sm">Modifier</a>
-                                    </td>
+                                    <th>Titre</th>
+                                    <th>Description</th>
+                                    <th>Assigné à</th>
+                                    <th>Statut</th>
+                                    <th>Priorité</th>
+                                    <th>Actions</th>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($tasks)): ?>
+                                    <?php foreach ($tasks as $task): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($task['title']); ?></td>
+                                            <td><?php echo htmlspecialchars($task['description']); ?></td>
+                                            <td>
+                                                <?php
+                                                $assigneeIds = explode(',', $task['assignee_id']);
+                                                $assignees = [];
+                                                foreach ($assigneeIds as $id) {
+                                                    $assigneeStmt = $pdo->prepare("SELECT CONCAT(prenom, ' ', nom) AS full_name FROM users WHERE id = ?");
+                                                    $assigneeStmt->execute([$id]);
+                                                    $assignee = $assigneeStmt->fetchColumn();
+                                                    if ($assignee) {
+                                                        $assignees[] = htmlspecialchars($assignee);
+                                                    }
+                                                }
+                                                echo implode('<br>', $assignees) ?: 'Non assigné';
+                                                ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($task['status'] == 'pending'): ?>
+                                                    <span class="badge bg-danger">Pending</span>
+                                                <?php elseif ($task['status'] == 'in_progress'): ?>
+                                                    <span class="badge bg-warning text-dark">In Progress</span>
+                                                <?php elseif ($task['status'] == 'completed'): ?>
+                                                    <span class="badge bg-success">Completed</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($task['priority'] == 'faible'): ?>
+                                                    <i class="fa-solid fa-battery-quarter text-success"></i>
+                                                <?php elseif ($task['priority'] == 'modéré'): ?>
+                                                    <i class="fa-solid fa-battery-half text-warning"></i>
+                                                <?php elseif ($task['priority'] == 'élevé'): ?>
+                                                    <i class="fa-solid fa-battery-full text-danger"></i>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                            <?php if (in_array($currentUserId, explode(',', $task['assignee_id']))): ?>
+                                                    <a href="tasks/edit.php?task_id=<?php echo $task['id']; ?>" class="btn btn-primary btn-sm">Modifier</a>
+                                                <?php else: ?>
+                                                    
+                                                <?php endif; ?>
+                                                
+                                                <?php if (in_array($currentUserId, explode(',', $task['assignee_id']))): ?>
+                                                    <a href="tasks/details.php?task_id=<?php echo $task['id']; ?>" class="btn btn-success btn-sm">Détail</a>
+                                                <?php else: ?>
+                                                    <button class="btn btn-danger btn-sm" disabled>Non assigné</button>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="6" class="text-center">Aucune tâche trouvée.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

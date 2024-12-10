@@ -63,23 +63,6 @@ try {
             <p><strong>Date de fin :</strong> <?php echo htmlspecialchars($task['end_date']); ?></p>
             <p><strong>Projet associé :</strong> <?php echo htmlspecialchars($task['project_title']); ?></p>
             <p><strong>Assignés :</strong></p>
-            <ul>
-                <td>
-                    <?php
-                    $assigneeIds = explode(',', $task['assignee_id']);
-                    $assignees = [];
-                    foreach ($assigneeIds as $id) {
-                        $assigneeStmt = $pdo->prepare("SELECT CONCAT(prenom, ' ', nom) AS full_name FROM users WHERE id = ?");
-                        $assigneeStmt->execute([$id]);
-                        $assignee = $assigneeStmt->fetchColumn();
-                        if ($assignee) {
-                            $assignees[] = htmlspecialchars($assignee);
-                        }
-                    }
-                    echo implode('<br>', $assignees) ?: 'Non assigné';
-                    ?>
-                </td>
-            </ul>
         </div>
         <div class="card-footer text-center">
             <a href="view.php" class="btn btn-primary">Retour à la liste des tâches</a>
